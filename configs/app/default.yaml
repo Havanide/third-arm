@@ -1,0 +1,40 @@
+# ── Third Arm — default app config ──────────────────────────────────────────────
+# Values here are overridden by profile-specific YAMLs and then by .env vars.
+
+service:
+  name: third-arm
+  version: "0.1.0"
+
+server:
+  host: "0.0.0.0"
+  port: 8080
+  log_level: INFO
+  reload: false
+
+hardware:
+  mock: true                # Stage 1 default — always mock unless overridden
+  home_timeout_s: 10.0
+  handover_timeout_s: 30.0
+  safe_stop_timeout_s: 5.0
+
+camera:
+  enabled: false            # Stage 1.5+
+  index: 0
+  resolution: [640, 480]
+  fps: 30
+
+intent:
+  imu_enabled: false        # Stage 2+
+  semg_enabled: false       # Stage 2+
+
+logging:
+  sessions_dir: "./sessions"
+  write_mcap: true          # placeholder in Stage 1; real binary in Stage 1.5+
+  write_trace: true
+  flush_interval_s: 1.0
+
+mqtt:
+  enabled: false            # future
+  broker: "localhost"
+  port: 1883
+  topic_prefix: "third-arm"

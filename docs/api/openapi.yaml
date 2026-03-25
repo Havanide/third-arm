@@ -1,0 +1,169 @@
+openapi: "3.1.0"
+info:
+  title: Third Arm API
+  version: "0.1.0"
+  description: |
+    REST northbound contract for the Third Arm intent-driven handover service.
+    Stage 1 — operator-triggered, mock hardware.
+  contact:
+    name: Third Arm Team
+
+# TODO: replace localhost with real base URL before staging/production deploy
+servers:
+  - url: http://localhost:8080
+    description: Local dev
+
+tags:
+  - name: health
+  - name: status
+  - name: session
+  - name: arm
+  - name: handover
+  - name: artifacts
+
+paths:
+  /health:
+    get:
+      tags: [health]
+      summary: Liveness check
+      operationId: getHealth
+      responses:
+        "200":
+          description: Service is alive
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+
+  /status:
+    get:
+      tags: [status]
+      summary: Arm state and active session info
+      operationId: getStatus
+      responses:
+        "200":
+          description: Current status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StatusResponse"
+
+  /session/start:
+    post:
+      tags: [session]
+      summary: Begin a new handover session
+      operationId: startSession
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SessionStartRequest"
+      responses:
+        "200":
+          description: Session created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionResponse"
+        "409":
+          description: Session already active
+
+  /session/stop:
+    post:
+      tags: [session]
+      summary: End or abort current session
+      operationId: stopSession
+      responses:
+        "200":
+          description: Session stopped
+        "404":
+          description: No active session
+
+  /arm/home:
+    post:
+      tags: [arm]
+      summary: Command arm to home position
+      operationId: armHome
+      responses:
+        "202":
+          description: Home command accepted
+        "409":
+          description: Command rejected in current state
+
+  /handover/request:
+    post:
+      tags: [handover]
+      summary: Trigger object handover
+      operationId: handoverRequest
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HandoverRequest"
+      responses:
+        "202":
+          description: Handover initiated
+        "409":
+          description: Arm not ready
+
+  /artifacts:
+    get:
+      tags: [artifacts]
+      summary: List session bundles
+      operationId: listArtifacts
+      responses:
+        "200":
+          description: List of session bundle directories
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ArtifactsResponse"
+
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      properties:
+        status:  { type: string, example: ok }
+        version: { type: string, example: "0.1.0" }
+        ts:      { type: string, format: date-time }
+
+    StatusResponse:
+      type: object
+      properties:
+        arm_state:  { type: string, example: idle }
+        session_id: { type: string, nullable: true }
+        uptime_s:   { type: number }
+        mock_mode:  { type: boolean }
+
+    SessionStartRequest:
+      type: object
+      properties:
+        operator_id: { type: string, example: "operator-01" }
+        object_id:   { type: string, example: "obj_water_bottle_500ml" }
+        slot_id:     { type: string, example: "slot_A" }
+        notes:       { type: string }
+
+    SessionResponse:
+      type: object
+      properties:
+        session_id: { type: string }
+        started_at: { type: string, format: date-time }
+
+    HandoverRequest:
+      type: object
+      properties:
+        object_id: { type: string }
+        slot_id:   { type: string }
+
+    ArtifactsResponse:
+      type: object
+      properties:
+        bundles:
+          type: array
+          items:
+            type: object
+            properties:
+              session_id: { type: string }
+              path:       { type: string }
+              size_bytes: { type: integer }

@@ -1,0 +1,40 @@
+# ── Third Arm — Stage 1 object catalogue ────────────────────────────────────────
+# Known objects the arm can handle in Stage 1.
+# Vision pipeline will match detections against this catalogue (Stage 1.5+).
+
+schema_version: "1.0"
+
+objects:
+  - id: obj_water_bottle_500ml
+    label: "Water bottle 500 ml"
+    category: drink
+    default_slot: slot_A
+    grasp_type: cylindrical_side
+    mass_g: 550
+    dimensions_mm: {diameter: 65, height: 200}
+    camera_class_label: "bottle"        # COCO class for Stage 1.5 detector
+    enabled: true
+
+  - id: obj_mug_ceramic
+    label: "Ceramic mug"
+    category: drink
+    default_slot: slot_B
+    grasp_type: top_pinch
+    mass_g: 320
+    dimensions_mm: {width: 80, depth: 80, height: 95}
+    camera_class_label: "cup"
+    enabled: true
+
+  - id: obj_tablet_ipad
+    label: "Tablet / iPad"
+    category: device
+    default_slot: slot_C
+    grasp_type: flat_side
+    mass_g: 490
+    dimensions_mm: {width: 175, depth: 250, height: 7}
+    camera_class_label: null            # TODO: add custom detector class (Stage 1.5)
+    enabled: false                      # slot_C disabled; re-enable together
+
+# ── Notes ────────────────────────────────────────────────────────────────────────
+# Stage 1  : object is selected by operator (no vision)
+# Stage 1.5: camera_class_label drives automatic detection + slot assignment

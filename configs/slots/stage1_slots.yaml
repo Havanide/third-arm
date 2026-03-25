@@ -1,0 +1,47 @@
+# ── Third Arm — Stage 1 slot map ────────────────────────────────────────────────
+# Defines physical storage slots the arm can reach.
+# Coordinates are in arm-local frame (mm). Angles in degrees.
+
+schema_version: "1.0"
+
+slots:
+  - id: slot_A
+    label: "Slot A — left tray"
+    enabled: true
+    position:
+      x: 150
+      y:  50
+      z: 120
+    approach_angle_deg: 45
+    grasp_type: top_pinch
+    notes: "Primary demo slot — Stage 1"
+
+  - id: slot_B
+    label: "Slot B — centre tray"
+    enabled: true
+    position:
+      x: 150
+      y:   0
+      z: 120
+    approach_angle_deg: 0
+    grasp_type: top_pinch
+    notes: "Secondary demo slot — Stage 1"
+
+  - id: slot_C
+    label: "Slot C — right tray"
+    enabled: false            # disabled until calibrated
+    position:
+      x: 150
+      y: -50
+      z: 120
+    approach_angle_deg: -45
+    grasp_type: top_pinch
+    notes: "TODO: calibrate position before enabling"
+
+handover_zone:
+  label: "Operator handover point"
+  position:
+    x: 300
+    y:   0
+    z: 200
+  clearance_radius_mm: 80

@@ -1,0 +1,45 @@
+# ── Python ──────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+htmlcov/
+.coverage
+coverage.xml
+
+# ── Virtual environments ─────────────────────────────────────────────────────────
+.venv/
+venv/
+env/
+
+# ── Environment / secrets ────────────────────────────────────────────────────────
+.env
+*.secret
+
+# ── Session bundles (runtime output — large, not for VCS) ───────────────────────
+sessions/*/
+!sessions/.gitkeep
+
+# ── macOS ────────────────────────────────────────────────────────────────────────
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# ── IDEs ─────────────────────────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# ── Calibration snapshots (machine-specific) ─────────────────────────────────────
+configs/calibration/*.yaml
+!configs/calibration/placeholder.yaml

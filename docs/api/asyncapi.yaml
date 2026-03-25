@@ -1,0 +1,83 @@
+asyncapi: "2.6.0"
+info:
+  title: Third Arm WebSocket / Event Stream
+  version: "0.1.0"
+  description: |
+    Real-time telemetry and event stream over WebSocket.
+    Northbound contract — operator UI subscribes here.
+    Stage 1: unidirectional server→client push.
+
+# TODO: add MQTT channels when MQTT transport is enabled (Stage 2+)
+
+servers:
+  local:
+    url: ws://localhost:8080
+    protocol: ws
+
+channels:
+  /ws/stream:
+    description: |
+      Server pushes arm telemetry, state transitions, and fault events.
+      Client can send ping frames; server echoes pong (keep-alive).
+    subscribe:
+      summary: Receive real-time events from the arm service
+      message:
+        oneOf:
+          - $ref: "#/components/messages/TelemetryFrame"
+          - $ref: "#/components/messages/StateTransitionEvent"
+          - $ref: "#/components/messages/FaultEvent"
+          - $ref: "#/components/messages/SessionEvent"
+
+components:
+  messages:
+    TelemetryFrame:
+      name: telemetry
+      payload:
+        type: object
+        properties:
+          type:        { type: string, const: telemetry }
+          ts:          { type: string, format: date-time }
+          session_id:  { type: string, nullable: true }
+          joint_angles_deg:
+            type: array
+            items: { type: number }
+          ee_position_mm:
+            type: object
+            properties:
+              x: { type: number }
+              y: { type: number }
+              z: { type: number }
+          gripper_pct: { type: number, description: "0–100" }
+          mock:        { type: boolean }
+
+    StateTransitionEvent:
+      name: state_transition
+      payload:
+        type: object
+        properties:
+          type:      { type: string, const: state_transition }
+          ts:        { type: string, format: date-time }
+          from_state: { type: string }
+          to_state:   { type: string }
+          trigger:    { type: string }
+
+    FaultEvent:
+      name: fault
+      payload:
+        type: object
+        properties:
+          type:     { type: string, const: fault }
+          ts:       { type: string, format: date-time }
+          code:     { type: string }
+          message:  { type: string }
+          severity: { type: string, enum: [warning, error, critical] }
+
+    SessionEvent:
+      name: session_event
+      payload:
+        type: object
+        properties:
+          type:       { type: string, const: session_event }
+          ts:         { type: string, format: date-time }
+          event:      { type: string, enum: [started, stopped, handover_complete, handover_aborted] }
+          session_id: { type: string }

@@ -1,0 +1,33 @@
+# ── Third Arm — Stage 1 Desktop profile ─────────────────────────────────────────
+# Operator-triggered handover. Mock hardware. Camera-ready (camera-off).
+# This profile is the primary target for Stage 1 demos.
+
+server:
+  host: "127.0.0.1"         # desktop-only — no external exposure
+  port: 8080
+  log_level: INFO
+  reload: false
+
+hardware:
+  mock: true
+  home_timeout_s: 10.0
+  handover_timeout_s: 30.0
+  safe_stop_timeout_s: 5.0
+
+camera:
+  enabled: false            # set true when camera is physically connected (Stage 1.5)
+
+intent:
+  imu_enabled: false
+  semg_enabled: false
+
+logging:
+  sessions_dir: "./sessions"
+  write_mcap: true
+  write_trace: true
+
+# ── Stage notes ─────────────────────────────────────────────────────────────────
+# Stage 1   : mock_arm driver, operator-triggered via REST
+# Stage 1.5 : camera.enabled=true + real arm driver
+# Stage 2   : imu_enabled / semg_enabled
+# Stage 3   : full autonomous loop

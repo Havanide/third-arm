@@ -1,0 +1,36 @@
+# ── Third Arm — calibration placeholder ─────────────────────────────────────────
+# Real calibration files are machine-specific and gitignored.
+# This placeholder documents the expected schema.
+#
+# TODO: replace with actual values after running calibration routine
+#       (scripts/calibrate.py — to be created in Stage 1.5)
+
+schema_version: "1.0"
+generated_at: null          # ISO-8601 timestamp
+operator: null              # who ran calibration
+
+arm:
+  home_offsets_mm:          # per-joint zero offsets
+    j1: 0.0
+    j2: 0.0
+    j3: 0.0
+    j4: 0.0
+    j5: 0.0
+    j6: 0.0
+  tool_length_mm: 0.0
+
+camera:                     # Stage 1.5+ — extrinsic relative to arm base
+  enabled: false
+  T_cam_to_arm:             # 4x4 homogeneous transform (row-major)
+    - [1, 0, 0, 0]
+    - [0, 1, 0, 0]
+    - [0, 0, 1, 0]
+    - [0, 0, 0, 1]
+  intrinsics:
+    fx: null
+    fy: null
+    cx: null
+    cy: null
+    distortion_coeffs: []
+
+notes: "Placeholder — do not use for real operation"

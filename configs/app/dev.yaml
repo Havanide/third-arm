@@ -1,0 +1,13 @@
+# ── Third Arm — dev profile (inherits default.yaml) ────────────────────────────
+# Overrides for local development: verbose logging, auto-reload, mock hardware.
+
+server:
+  log_level: DEBUG
+  reload: true
+
+hardware:
+  mock: true
+  home_timeout_s: 5.0
+
+logging:
+  flush_interval_s: 0.25   # faster flush for dev inspection
