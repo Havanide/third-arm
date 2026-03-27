@@ -30,6 +30,8 @@ from third_arm.core.settings import get_settings
 from third_arm.domain.handover_service import HandoverService
 from third_arm.domain.session_service import SessionService
 from third_arm.domain.state_machine import StateMachine
+from third_arm.logging.bundle_writer import BundleWriter
+from third_arm.storage.paths import ensure_sessions_dir
 
 logging.basicConfig(level=logging.DEBUG, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 logger = logging.getLogger(__name__)
@@ -57,9 +59,19 @@ async def lifespan(app: FastAPI):
 
     app.state.arm_driver = driver
 
+    # ── Bundle writer ─────────────────────────────────────────────────────────
+    ensure_sessions_dir(cfg.sessions_dir)
+    bundle_writer = BundleWriter(cfg.sessions_dir)
+    app.state.bundle_writer = bundle_writer
+
     # ── Services ─────────────────────────────────────────────────────────────
-    session_service = SessionService()
-    handover_service = HandoverService(state_machine=sm, driver=driver)
+    session_service = SessionService(bundle_writer=bundle_writer)
+    handover_service = HandoverService(
+        state_machine=sm,
+        driver=driver,
+        session_service=session_service,
+        bundle_writer=bundle_writer,
+    )
     app.state.session_service = session_service
     app.state.handover_service = handover_service
 

@@ -19,6 +19,7 @@ from dataclasses import dataclass, field
 from third_arm.core.clock import now_iso
 from third_arm.core.errors import NoActiveSessionError, SessionAlreadyActiveError
 from third_arm.core.ids import new_session_id
+from third_arm.domain.contracts import BundleWriterABC
 from third_arm.domain.policies import can_start_session
 
 
@@ -34,6 +35,8 @@ class Session:
     stopped_at: str | None = None
     notes: str = ""
     handover_ids: list[str] = field(default_factory=list)
+    bundle_path: str | None = None
+    stop_trace_written: bool = False
 
     @property
     def is_active(self) -> bool:
@@ -45,11 +48,13 @@ class SessionService:
 
     Intended to be a singleton injected via FastAPI dependency.
 
-    TODO: wire to BundleWriter for logging open/close events.
+    Args:
+        bundle_writer: Port implementation for session bundle logging.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, bundle_writer: BundleWriterABC) -> None:
         self._active: Session | None = None
+        self._bundle_writer = bundle_writer
 
     @property
     def active(self) -> Session | None:
@@ -65,8 +70,12 @@ class SessionService:
     ) -> Session:
         """Start a new session.
 
+        Opens a bundle directory before creating the session object.
+        If the bundle cannot be opened the session is NOT created.
+
         Raises:
             SessionAlreadyActiveError: if a session is already running.
+            RuntimeError: if the bundle writer fails to open.
         """
         allowed, reason = can_start_session(
             self._active.session_id if self._active else None
@@ -74,29 +83,76 @@ class SessionService:
         if not allowed:
             raise SessionAlreadyActiveError(self._active.session_id)  # type: ignore[union-attr]
 
+        session_id = new_session_id()
+
+        try:
+            self._bundle_writer.open_session(
+                session_id,
+                metadata={
+                    "operator_id": operator_id,
+                    "object_id": object_id,
+                    "slot_id": slot_id,
+                    "notes": notes,
+                },
+            )
+        except Exception as exc:
+            raise RuntimeError(f"Failed to open bundle for session {session_id}") from exc
+
         session = Session(
-            session_id=new_session_id(),
+            session_id=session_id,
             operator_id=operator_id,
             object_id=object_id,
             slot_id=slot_id,
             started_at=now_iso(),
             notes=notes,
+            bundle_path=str(self._bundle_writer.bundle_dir),
         )
+
+        try:
+            self._bundle_writer.write_trace_event({
+                "event": "session_started",
+                "session_id": session_id,
+                "operator_id": operator_id,
+                "object_id": object_id,
+                "slot_id": slot_id,
+            })
+        except Exception:
+            try:
+                self._bundle_writer.close_session()
+            except Exception:
+                pass
+            raise
+
         self._active = session
+
         return session
 
     def stop(self) -> Session:
         """Stop the active session.
+
+        Writes a trace event and closes the bundle before returning.
 
         Raises:
             NoActiveSessionError: if no session is running.
         """
         if self._active is None:
             raise NoActiveSessionError()
-        self._active.stopped_at = now_iso()
-        completed = self._active
+
+        session = self._active
+        stopped_at = now_iso()
+
+        if not session.stop_trace_written:
+            self._bundle_writer.write_trace_event({
+                "event": "session_stopped",
+                "session_id": session.session_id,
+            })
+            session.stop_trace_written = True
+
+        self._bundle_writer.close_session()
+
+        session.stopped_at = stopped_at
         self._active = None
-        return completed
+        return session
 
     def require_active(self) -> Session:
         """Return the active session or raise NoActiveSessionError."""

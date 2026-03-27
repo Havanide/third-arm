@@ -1,7 +1,7 @@
 """
 third_arm.api.schemas.commands
 ─────────────────────────────────────────────────────────────────────────────
-Request body schemas for operator commands.
+Request and response schemas for operator commands.
 """
 
 from __future__ import annotations
@@ -23,3 +23,29 @@ class HandoverRequestBody(BaseModel):
 
     object_id: str = Field(..., description="Object catalogue ID")
     slot_id: str = Field(..., description="Source slot ID")
+
+
+class SessionResponse(BaseModel):
+    """Response body for POST /session/start."""
+
+    session_id: str
+    started_at: str
+    operator_id: str
+
+
+class SessionStopResponse(BaseModel):
+    """Response body for POST /session/stop."""
+
+    session_id: str
+    stopped_at: str
+    status: str
+
+
+class HandoverResponse(BaseModel):
+    """Response body for POST /handover/request."""
+
+    handover_id: str
+    object_id: str
+    slot_id: str
+    completed_at: str
+    status: str

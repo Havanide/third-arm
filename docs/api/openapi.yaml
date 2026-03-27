@@ -76,6 +76,10 @@ paths:
       responses:
         "200":
           description: Session stopped
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionStopResponse"
         "404":
           description: No active session
 
@@ -103,6 +107,10 @@ paths:
       responses:
         "202":
           description: Handover initiated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HandoverResponse"
         "409":
           description: Arm not ready
 
@@ -149,12 +157,29 @@ components:
       properties:
         session_id: { type: string }
         started_at: { type: string, format: date-time }
+        operator_id: { type: string }
+
+    SessionStopResponse:
+      type: object
+      properties:
+        session_id: { type: string }
+        stopped_at: { type: string, format: date-time }
+        status: { type: string }
 
     HandoverRequest:
       type: object
       properties:
         object_id: { type: string }
         slot_id:   { type: string }
+
+    HandoverResponse:
+      type: object
+      properties:
+        handover_id: { type: string }
+        object_id: { type: string }
+        slot_id: { type: string }
+        completed_at: { type: string, format: date-time }
+        status: { type: string }
 
     ArtifactsResponse:
       type: object
