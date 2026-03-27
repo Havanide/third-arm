@@ -86,9 +86,24 @@ def test_ids_are_unique():
     assert len(ids) == 100
 
 
+class _NullBundleWriter:
+    """Minimal stub for unit tests — discards all calls."""
+
+    bundle_dir = None
+
+    def open_session(self, session_id, metadata=None):
+        pass
+
+    def write_trace_event(self, event):
+        pass
+
+    def close_session(self):
+        pass
+
+
 def test_session_service_start_stop():
     from third_arm.domain.session_service import SessionService
-    svc = SessionService()
+    svc = SessionService(bundle_writer=_NullBundleWriter())
     session = svc.start(operator_id="test-op")
     assert session.is_active
     stopped = svc.stop()
@@ -98,7 +113,7 @@ def test_session_service_start_stop():
 def test_session_service_double_start_raises():
     from third_arm.core.errors import SessionAlreadyActiveError
     from third_arm.domain.session_service import SessionService
-    svc = SessionService()
+    svc = SessionService(bundle_writer=_NullBundleWriter())
     svc.start()
     with pytest.raises(SessionAlreadyActiveError):
         svc.start()

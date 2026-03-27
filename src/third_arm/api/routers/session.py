@@ -24,9 +24,9 @@ async def start_session(
     """Begin a new handover session.
 
     The arm must be in READY or IDLE state to start a session.
+    Opens a session bundle on disk; returns the artifact path for replay.
 
     TODO: trigger state machine ``home_cmd`` if arm is IDLE.
-    TODO: open bundle writer session.
     """
     if sm.state not in (ArmState.READY, ArmState.IDLE):
         raise HTTPException(
@@ -53,6 +53,7 @@ async def start_session(
         "session_id": session.session_id,
         "started_at": session.started_at,
         "operator_id": session.operator_id,
+        "artifact_path": session.bundle_path,
     }
 
 
@@ -62,8 +63,9 @@ async def stop_session(
 ) -> dict:
     """End or abort the current session.
 
+    Writes a session_stopped trace event and closes the bundle.
+
     TODO: trigger state machine ``abort`` if mid-task.
-    TODO: close bundle writer session.
     """
     try:
         session = sessions.stop()

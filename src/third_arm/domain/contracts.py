@@ -71,7 +71,7 @@ class BundleWriterABC(ABC):
     """Port: session bundle / replay logging."""
 
     @abstractmethod
-    def open_session(self, session_id: str) -> None:
+    def open_session(self, session_id: str, metadata: dict | None = None) -> None:
         """Initialise a new session bundle directory."""
         ...
 
