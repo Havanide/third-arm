@@ -36,6 +36,7 @@ class Session:
     notes: str = ""
     handover_ids: list[str] = field(default_factory=list)
     bundle_path: str | None = None
+    stop_trace_written: bool = False
 
     @property
     def is_active(self) -> bool:
@@ -106,15 +107,23 @@ class SessionService:
             notes=notes,
             bundle_path=str(self._bundle_writer.bundle_dir),
         )
-        self._active = session
 
-        self._bundle_writer.write_trace_event({
-            "event": "session_started",
-            "session_id": session_id,
-            "operator_id": operator_id,
-            "object_id": object_id,
-            "slot_id": slot_id,
-        })
+        try:
+            self._bundle_writer.write_trace_event({
+                "event": "session_started",
+                "session_id": session_id,
+                "operator_id": operator_id,
+                "object_id": object_id,
+                "slot_id": slot_id,
+            })
+        except Exception:
+            try:
+                self._bundle_writer.close_session()
+            except Exception:
+                pass
+            raise
+
+        self._active = session
 
         return session
 
@@ -129,16 +138,21 @@ class SessionService:
         if self._active is None:
             raise NoActiveSessionError()
 
-        self._bundle_writer.write_trace_event({
-            "event": "session_stopped",
-            "session_id": self._active.session_id,
-        })
+        session = self._active
+        stopped_at = now_iso()
 
-        self._active.stopped_at = now_iso()
-        completed = self._active
-        self._active = None
+        if not session.stop_trace_written:
+            self._bundle_writer.write_trace_event({
+                "event": "session_stopped",
+                "session_id": session.session_id,
+            })
+            session.stop_trace_written = True
+
         self._bundle_writer.close_session()
-        return completed
+
+        session.stopped_at = stopped_at
+        self._active = None
+        return session
 
     def require_active(self) -> Session:
         """Return the active session or raise NoActiveSessionError."""

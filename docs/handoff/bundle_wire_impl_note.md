@@ -11,19 +11,18 @@ Previously all infrastructure existed but was unused (TODO comments in `SessionS
 |----------|--------|
 | `main.py` lifespan | `BundleWriter(sessions_dir)` initialised and stored in `app.state.bundle_writer` |
 | `SessionService.__init__` | Accepts `bundle_writer: BundleWriterABC` |
-| `SessionService.start()` | Opens bundle **before** creating the Session; aborts if open fails |
-| `SessionService.stop()` | Writes `session_stopped` event, then closes bundle |
+| `SessionService.start()` | Opens bundle **before** creating the Session; rolls back if initial trace write fails |
+| `SessionService.stop()` | Writes `session_stopped`, keeps the session active until bundle close succeeds |
 | `HandoverService.__init__` | Accepts `session_service` and `bundle_writer` |
 | `HandoverService.request()` | Requires active session; writes three trace events |
-| `POST /session/start` response | Now includes `artifact_path` |
-| `POST /handover/request` response | Now includes `session_id` |
+| API responses | Existing Stage 1 response shapes stay unchanged; bundle discovery remains via `GET /artifacts` |
 
 ## Trace events emitted per operator flow
 
 ```
 session_started          ← on POST /session/start
 handover_requested       ← on POST /handover/request (before arm moves)
-handover_driver_started  ← after driver.start_handover() call
+handover_driver_started  ← immediately before driver.start_handover() call
 handover_completed       ← after state machine reaches TASK_COMPLETE
 session_stopped          ← on POST /session/stop
 ```

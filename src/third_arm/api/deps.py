@@ -23,7 +23,6 @@ from fastapi import Request
 from third_arm.domain.handover_service import HandoverService
 from third_arm.domain.session_service import SessionService
 from third_arm.domain.state_machine import StateMachine
-from third_arm.logging.bundle_writer import BundleWriter
 
 
 def get_state_machine(request: Request) -> StateMachine:
@@ -39,8 +38,3 @@ def get_session_service(request: Request) -> SessionService:
 def get_handover_service(request: Request) -> HandoverService:
     """Return the shared HandoverService from app state."""
     return request.app.state.handover_service
-
-
-def get_bundle_writer(request: Request) -> BundleWriter:
-    """Return the shared BundleWriter from app state."""
-    return request.app.state.bundle_writer

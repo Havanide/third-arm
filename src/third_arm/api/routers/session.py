@@ -5,7 +5,11 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from third_arm.api.deps import get_session_service, get_state_machine
-from third_arm.api.schemas.commands import SessionStartRequest
+from third_arm.api.schemas.commands import (
+    SessionStartRequest,
+    SessionResponse,
+    SessionStopResponse,
+)
 from third_arm.core.errors import NoActiveSessionError, SessionAlreadyActiveError
 from third_arm.domain.object_model import get_object
 from third_arm.domain.session_service import SessionService
@@ -15,16 +19,20 @@ from third_arm.domain.state_machine import ArmState, StateMachine
 router = APIRouter(prefix="/session", tags=["session"])
 
 
-@router.post("/start", status_code=status.HTTP_200_OK)
+@router.post(
+    "/start",
+    status_code=status.HTTP_200_OK,
+    response_model=SessionResponse,
+)
 async def start_session(
     body: SessionStartRequest,
     sm: StateMachine = Depends(get_state_machine),
     sessions: SessionService = Depends(get_session_service),
-) -> dict:
+) -> SessionResponse:
     """Begin a new handover session.
 
     The arm must be in READY or IDLE state to start a session.
-    Opens a session bundle on disk; returns the artifact path for replay.
+    Opens a session bundle on disk for later discovery via ``GET /artifacts``.
 
     TODO: trigger state machine ``home_cmd`` if arm is IDLE.
     """
@@ -53,14 +61,17 @@ async def start_session(
         "session_id": session.session_id,
         "started_at": session.started_at,
         "operator_id": session.operator_id,
-        "artifact_path": session.bundle_path,
     }
 
 
-@router.post("/stop", status_code=status.HTTP_200_OK)
+@router.post(
+    "/stop",
+    status_code=status.HTTP_200_OK,
+    response_model=SessionStopResponse,
+)
 async def stop_session(
     sessions: SessionService = Depends(get_session_service),
-) -> dict:
+) -> SessionStopResponse:
     """End or abort the current session.
 
     Writes a session_stopped trace event and closes the bundle.

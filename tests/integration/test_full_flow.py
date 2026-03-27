@@ -21,7 +21,6 @@ Assertions verify:
 from __future__ import annotations
 
 import json
-from pathlib import Path
 
 import pytest
 import pytest_asyncio
@@ -72,11 +71,10 @@ async def test_full_session_handover_flow(client, tmp_path):
     assert resp.status_code == 200, resp.text
     start_data = resp.json()
     session_id = start_data["session_id"]
-    artifact_path = start_data["artifact_path"]
 
     assert session_id.startswith("session_")
-    assert artifact_path is not None
-    bundle_dir = Path(artifact_path)
+    assert set(start_data) == {"session_id", "started_at", "operator_id"}
+    bundle_dir = tmp_path / session_id
 
     # ── 3. Request a handover ─────────────────────────────────────────────────
     resp = await client.post(
@@ -86,9 +84,9 @@ async def test_full_session_handover_flow(client, tmp_path):
     assert resp.status_code == 202, resp.text
     handover_data = resp.json()
     assert handover_data["status"] == "complete"
-    assert handover_data["session_id"] == session_id
     handover_id = handover_data["handover_id"]
     assert handover_id.startswith("hov_")
+    assert set(handover_data) == {"handover_id", "object_id", "slot_id", "completed_at", "status"}
 
     # ── 4. Stop the session ───────────────────────────────────────────────────
     resp = await client.post("/session/stop")
@@ -129,3 +127,18 @@ async def test_full_session_handover_flow(client, tmp_path):
     artifacts_data = resp.json()
     bundle_ids = [b["session_id"] for b in artifacts_data["bundles"]]
     assert session_id in bundle_ids, f"Session {session_id} not in artifacts: {bundle_ids}"
+
+
+@pytest.mark.asyncio
+async def test_handover_requires_active_session(client):
+    """POST /handover/request should reject requests when no session is active."""
+
+    resp = await client.post("/arm/home")
+    assert resp.status_code == 202, resp.text
+
+    resp = await client.post(
+        "/handover/request",
+        json={"object_id": "obj_water_bottle_500ml", "slot_id": "slot_A"},
+    )
+    assert resp.status_code == 409, resp.text
+    assert resp.json()["detail"] == "No active session"

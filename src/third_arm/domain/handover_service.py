@@ -52,7 +52,7 @@ class HandoverService:
     async def request(self, object_id: str, slot_id: str) -> dict:
         """Initiate a handover for *object_id* from *slot_id*.
 
-        Returns a summary dict with handover_id, session_id, and status.
+        Returns a summary dict with handover_id and status.
 
         Raises:
             NoActiveSessionError: if no session is currently active.
@@ -81,12 +81,12 @@ class HandoverService:
         await asyncio.sleep(0)              # yield to event loop
 
         self._sm.trigger("task_arm")        # TASK_ARMING → ACQUIRE
-        await self._driver.start_handover(slot_id=slot_id, object_id=object_id)
-
         self._bundle_writer.write_trace_event({
             "event": "handover_driver_started",
             "handover_id": handover_id,
+            "session_id": session.session_id,
         })
+        await self._driver.start_handover(slot_id=slot_id, object_id=object_id)
 
         self._sm.trigger("lift_cmd")        # ACQUIRE → LIFT
         await asyncio.sleep(0)
@@ -116,7 +116,6 @@ class HandoverService:
 
         return {
             "handover_id": handover_id,
-            "session_id": session.session_id,
             "object_id": object_id,
             "slot_id": slot_id,
             "completed_at": now_iso(),
