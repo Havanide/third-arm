@@ -26,3 +26,8 @@
   remain stable as subsequent slices are added. A labelled `smoke` marker and dedicated CI
   step make the gate explicit and machine-enforced.
 - Affects: pytest marker config, CI workflow, AGENTS.md process rules.
+
+## 2026-04-04
+- Decision: `GET /artifacts/{session_id}` must validate session ids and degrade honestly on broken bundles.
+- Reason: Stage 1 inspection is for operator debugging before hardware bring-up; broken bundles inside the session root must remain inspectable, while unsafe path-style ids must never escape the configured storage root.
+- Affects: artifact router lookup rules, inspection response contract, integration tests, RPD wording.
