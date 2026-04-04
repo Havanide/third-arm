@@ -60,6 +60,12 @@ The CI workflow (`.github/workflows/python-ci.yml`) has two test steps:
    The smoke test is intentionally run twice: once explicitly as the gate, once as part of the suite.
    This is by design — the gate step makes failures immediately visible in CI logs.
 
+GitHub branch protection on `main` requires the matrix checks:
+- `test (3.10)`
+- `test (3.11)`
+
+Because the smoke step runs inside those required jobs, the Stage 1 smoke path is now an enforced merge gate for `main`.
+
 ---
 
 ## What the smoke path does NOT cover

@@ -18,8 +18,10 @@ to a labelled, machine-enforced merge gate for all PRs targeting `main`.
 - `smoke` marker registered in `pyproject.toml`
 - Dedicated CI step `Stage 1 smoke gate` added to `.github/workflows/python-ci.yml`,
   runs `pytest -m smoke -v` before the full test suite
+- GitHub branch protection on `main` requires `test (3.10)` and `test (3.11)`
 - `AGENTS.md` updated: smoke path is now item 3 in "Required before finishing a task"
 - Decision recorded in `docs/decisions/DECISIONS_LOG.md`
+- RPD v0.17 package now contains dedicated PRD / Architecture / Procurement / Assembly notes for this slice
 
 ---
 
@@ -68,9 +70,15 @@ All Stage 1 deliverables confirmed:
 
 ---
 
-## Files not changed in v0.17
+## RPD package contents in v0.17
 
-- `Third Arm PRD v0.16.docx` — no product scope change; PRD implications noted above
-- `Third Arm Architecture Spec v0.16.docx` — no architectural change; note above
-- `Third Arm Assembly Print Pack v0.16.pdf` — no hardware change
-- `Third Arm Procurement v0.16.xlsx` — no procurement change
+- `Third Arm Status Update v0.17.md`
+- `Third Arm PRD v0.17.md`
+- `Third Arm Architecture Spec v0.17.md`
+- `Third Arm Procurement Note v0.17.md`
+- `Third Arm Assembly Note v0.17.md`
+
+## Historical package preservation
+
+- `rpd/v0.16` remains the previous historical package and is not rewritten by this slice
+- The smoke-gate change is documented as a new `v0.17` package instead of mutating prior versions
