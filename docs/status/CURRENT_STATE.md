@@ -14,7 +14,7 @@ GET /artifacts/{session_id} — single-bundle inspection endpoint
 - Session start/stop rollback behavior is covered by targeted tests
 - Replay reader and artifact listing work against the runtime-produced bundle layout
 - Stage 1 smoke path marked with `@pytest.mark.smoke`; runs as dedicated CI gate before full suite
-- `GET /artifacts/{session_id}` returns bundle metadata, file inventory, and trace event count; 404 for missing bundles; degraded response for partial bundles
+- `GET /artifacts/{session_id}` returns bundle metadata, presence flags, file inventory, and trace event count; 404 for unknown/unsafe ids; degraded response for incomplete or broken bundles inside the sessions root
 
 ## Confirmed frozen
 - API freeze: yes

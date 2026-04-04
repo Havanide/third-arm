@@ -38,6 +38,11 @@ GET /artifacts/{session_id}
   "created_at":      ISO8601 string | null,
   "closed_at":       ISO8601 string | null,
   "is_closed":       bool,
+  "presence": {
+    "manifest":    bool,
+    "trace":       bool,
+    "telemetry":   bool
+  },
   "files": [
     {
       "name":       string,      // filename
@@ -48,7 +53,8 @@ GET /artifacts/{session_id}
   ],
   "trace_summary": {
     "event_count": int
-  }
+  },
+  "errors": [string]
 }
 
 → 404 Not Found
@@ -57,9 +63,16 @@ GET /artifacts/{session_id}
 
 ### Degraded response (partial bundle)
 
-If a bundle directory has `manifest.json` but is missing other files, the endpoint returns 200
-with `exists: false` for missing files and `event_count: 0`. This makes incomplete bundles
-visible for debugging without crashing the API.
+If a bundle directory exists under the configured sessions root but is incomplete or has a broken
+manifest, the endpoint returns 200 with nullable manifest fields, `exists: false` for missing
+files, and `errors` explaining what is broken. This keeps failed sessions inspectable without
+confusing them with a genuinely unknown session id.
+
+### Lookup safety
+
+`session_id` is treated as an opaque local identifier, not as an arbitrary path. The router rejects
+unsafe values (`..`, path separators, other path-like input) and resolves the final bundle path
+inside the configured sessions root before inspecting anything on disk.
 
 ### Role in Stage 1 observability
 

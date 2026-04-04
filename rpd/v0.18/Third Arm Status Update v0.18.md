@@ -15,10 +15,11 @@ Added a narrow REST endpoint for inspecting a single session bundle by session_i
 **Changes made:**
 - `GET /artifacts/{session_id}` added to `src/third_arm/api/routers/artifacts.py`
 - Reuses existing utilities: `bundle_path()`, `read_json()`, `ReplayReader`
-- Returns manifest metadata, file inventory (existence + size), trace event count
-- 404 for unknown/missing bundle; degraded response for partial bundles
-- 3 integration tests added: `tests/integration/test_artifact_inspection.py`
-  - happy path, not found, partial bundle
+- Validates `session_id` as a safe local bundle id before reading from disk
+- Returns manifest metadata, presence flags, file inventory (existence + size), trace event count, and inspection errors
+- 404 for unknown or unsafe session id; degraded response for incomplete or broken bundles inside the sessions root
+- 6 integration tests added/updated in `tests/integration/test_artifact_inspection.py`
+  - happy path, not found, partial bundle, missing manifest, malformed manifest, unsafe id
 
 ---
 

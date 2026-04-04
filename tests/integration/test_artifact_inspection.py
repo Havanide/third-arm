@@ -72,6 +72,8 @@ async def test_artifact_inspection_happy_path(client, tmp_path):
     assert data["created_at"] is not None
     assert data["closed_at"] is not None
     assert data["is_closed"] is True
+    assert data["presence"] == {"manifest": True, "trace": True, "telemetry": True}
+    assert data["errors"] == []
 
     # All three expected files must exist with size_bytes reported
     files_by_name = {f["name"]: f for f in data["files"]}
@@ -116,6 +118,8 @@ async def test_artifact_inspection_partial_bundle(client, tmp_path):
     assert data["session_id"] == session_id
     assert data["is_closed"] is False
     assert data["closed_at"] is None
+    assert data["presence"] == {"manifest": True, "trace": False, "telemetry": False}
+    assert data["errors"] == []
 
     files_by_name = {f["name"]: f for f in data["files"]}
     assert files_by_name["manifest.json"]["exists"] is True
@@ -124,3 +128,50 @@ async def test_artifact_inspection_partial_bundle(client, tmp_path):
 
     # Trace summary event count is 0 for missing trace file
     assert data["trace_summary"]["event_count"] == 0
+
+
+@pytest.mark.asyncio
+async def test_artifact_inspection_missing_manifest_returns_degraded_response(client, tmp_path):
+    """Existing bundle dir without manifest remains inspectable as a degraded bundle."""
+
+    session_id = "session_missing_manifest"
+    bundle_dir = tmp_path / session_id
+    bundle_dir.mkdir()
+    (bundle_dir / "session_trace.ndjson").write_text("")
+
+    resp = await client.get(f"/artifacts/{session_id}")
+    assert resp.status_code == 200, resp.text
+    data = resp.json()
+
+    assert data["session_id"] == session_id
+    assert data["schema_version"] is None
+    assert data["presence"] == {"manifest": False, "trace": True, "telemetry": False}
+    assert data["errors"] == ["manifest_missing"]
+
+
+@pytest.mark.asyncio
+async def test_artifact_inspection_malformed_manifest_returns_degraded_response(client, tmp_path):
+    """Malformed manifest should not collapse into a misleading 404."""
+
+    session_id = "session_bad_manifest"
+    bundle_dir = tmp_path / session_id
+    bundle_dir.mkdir()
+    (bundle_dir / "manifest.json").write_text("{not-json")
+
+    resp = await client.get(f"/artifacts/{session_id}")
+    assert resp.status_code == 200, resp.text
+    data = resp.json()
+
+    assert data["session_id"] == session_id
+    assert data["schema_version"] is None
+    assert data["presence"] == {"manifest": True, "trace": False, "telemetry": False}
+    assert data["errors"] == ["manifest_unreadable"]
+
+
+@pytest.mark.asyncio
+async def test_artifact_inspection_rejects_unsafe_session_id(client):
+    """Path traversal style session ids must not escape the sessions directory."""
+
+    resp = await client.get("/artifacts/..")
+    assert resp.status_code == 404, resp.text
+    assert "not found" in resp.json()["detail"].lower()

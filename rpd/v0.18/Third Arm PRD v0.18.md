@@ -29,8 +29,10 @@ Operators can now inspect a specific session bundle by `session_id`.
 
 **What it returns:**
 - Manifest metadata: `session_id`, `schema_version`, `created_at`, `closed_at`, `is_closed`
+- Presence flags: whether `manifest.json`, `session_trace.ndjson`, `telemetry.mcap` are present
 - File inventory: for each expected bundle file (`manifest.json`, `session_trace.ndjson`, `telemetry.mcap`) — whether it exists and its size in bytes
 - Trace summary: total event count from `session_trace.ndjson`
+- Inspection errors: short machine-readable flags for broken bundles inside the sessions root
 
 **What it does NOT do:**
 - Does not serve file contents (no download)
@@ -38,8 +40,8 @@ Operators can now inspect a specific session bundle by `session_id`.
 - Does not paginate or filter (future enhancement)
 
 **Error behaviour:**
-- 404 if session_id not found or manifest.json missing
-- Degraded response (files with `exists: false`) if bundle is incomplete
+- 404 if session_id is unknown or unsafe
+- Degraded response if a bundle exists but is incomplete or has a broken manifest
 
 ---
 
@@ -50,5 +52,5 @@ Operators can now inspect a specific session bundle by `session_id`.
 3. `manifest.closed_at` is set after session stop
 4. Trace events are ordered: `session_started` first, `session_stopped` last
 5. `GET /artifacts` lists all closed sessions
-6. `GET /artifacts/{session_id}` returns bundle metadata and file inventory
+6. `GET /artifacts/{session_id}` returns bundle metadata, presence flags, file inventory, and honest degraded inspection for broken bundles inside the sessions root
 7. `pytest -m smoke` passes as merge gate (CI-enforced)
