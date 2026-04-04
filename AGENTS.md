@@ -83,15 +83,18 @@ Merge:
 ## Required before finishing a task
 1. Code changes complete
 2. Relevant tests pass
-3. Documentation updated if needed
-4. Short change summary prepared
-5. Suggested PR title prepared
-6. Known risks listed
+3. Stage 1 smoke path must pass: `pytest -m smoke -v`
+4. Documentation updated if needed
+5. Short change summary prepared
+6. Suggested PR title prepared
+7. Known risks listed
 
 ## Testing expectations
 - At minimum run the project-relevant automated tests for the touched slice
 - Prefer adding or updating tests for behavior changes
 - Before proposing merge, prefer a full `pytest` run unless the task is strictly docs-only
+- The Stage 1 smoke path (`pytest -m smoke`) must pass before any PR targeting main.
+  It is the merge gate for Stage 1 operator flow.
 
 ## Documentation expectations
 When relevant, update:

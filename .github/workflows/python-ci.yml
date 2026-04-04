@@ -29,5 +29,8 @@ jobs:
           python -m pip install hatchling
           python -m pip install -e ".[dev]"
 
+      - name: Stage 1 smoke gate
+        run: pytest -m smoke -v
+
       - name: Run tests
         run: pytest -q

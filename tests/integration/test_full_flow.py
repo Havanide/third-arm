@@ -49,6 +49,7 @@ async def client(tmp_path, monkeypatch):
             yield ac
 
 
+@pytest.mark.smoke
 @pytest.mark.asyncio
 async def test_full_session_handover_flow(client, tmp_path):
     """Full operator flow produces a valid, closed session bundle on disk."""
