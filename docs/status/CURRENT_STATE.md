@@ -4,7 +4,7 @@
 Stage 1
 
 ## Current active slice
-Bundle/replay spine integrated into runtime flow
+Stage 1 smoke path established as mandatory merge gate
 
 ## Confirmed implemented
 - Operator flow works through REST: `POST /arm/home -> POST /session/start -> POST /handover/request -> POST /session/stop -> GET /artifacts`
@@ -13,6 +13,7 @@ Bundle/replay spine integrated into runtime flow
 - `POST /handover/request` requires an active session
 - Session start/stop rollback behavior is covered by targeted tests
 - Replay reader and artifact listing work against the runtime-produced bundle layout
+- Stage 1 smoke path marked with `@pytest.mark.smoke`; runs as dedicated CI gate before full suite
 
 ## Confirmed frozen
 - API freeze: yes

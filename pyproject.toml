@@ -46,6 +46,9 @@ packages = ["src/third_arm"]
 testpaths    = ["tests"]
 asyncio_mode = "auto"
 addopts      = "-v --tb=short"
+markers = [
+    "smoke: Stage 1 e2e smoke path — mandatory merge gate (mock hardware, no real arm required)",
+]
 
 [tool.ruff]
 line-length = 100

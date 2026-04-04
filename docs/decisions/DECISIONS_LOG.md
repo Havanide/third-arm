@@ -19,3 +19,10 @@
 - Decision: Session lifecycle failures must leave the runtime recoverable until bundle close succeeds.
 - Reason: Hidden active sessions and half-finalized bundles are not acceptable failure modes for Stage 1 replay logging.
 - Affects: session rollback behavior, bundle close semantics, targeted tests.
+
+## 2026-04-04
+- Decision: Stage 1 e2e smoke path is a mandatory merge gate for all PRs targeting main.
+- Reason: The baseline operator flow (home → session → handover → stop → artifacts) must
+  remain stable as subsequent slices are added. A labelled `smoke` marker and dedicated CI
+  step make the gate explicit and machine-enforced.
+- Affects: pytest marker config, CI workflow, AGENTS.md process rules.

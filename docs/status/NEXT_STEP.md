@@ -1,5 +1,7 @@
 # Next Step
 
+> **Prerequisite done:** Stage 1 smoke gate is in place (`pytest -m smoke`). Proceed to next feature slice.
+
 ## Goal
 Add a narrow Stage 1 REST endpoint to inspect one bundle in detail without changing the existing operator flow.
 
