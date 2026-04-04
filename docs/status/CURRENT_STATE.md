@@ -4,7 +4,7 @@
 Stage 1
 
 ## Current active slice
-Stage 1 smoke path established as mandatory merge gate
+GET /artifacts/{session_id} — single-bundle inspection endpoint
 
 ## Confirmed implemented
 - Operator flow works through REST: `POST /arm/home -> POST /session/start -> POST /handover/request -> POST /session/stop -> GET /artifacts`
@@ -14,6 +14,7 @@ Stage 1 smoke path established as mandatory merge gate
 - Session start/stop rollback behavior is covered by targeted tests
 - Replay reader and artifact listing work against the runtime-produced bundle layout
 - Stage 1 smoke path marked with `@pytest.mark.smoke`; runs as dedicated CI gate before full suite
+- `GET /artifacts/{session_id}` returns bundle metadata, file inventory, and trace event count; 404 for missing bundles; degraded response for partial bundles
 
 ## Confirmed frozen
 - API freeze: yes
@@ -25,7 +26,7 @@ Stage 1 smoke path established as mandatory merge gate
 - none
 
 ## Next planned slice
-- Add single-bundle artifact inspection via `GET /artifacts/{session_id}`
+- Update `docs/api/openapi.yaml` to reflect current Stage 1 API surface
 
 ## Blockers
 - none
