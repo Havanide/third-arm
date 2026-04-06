@@ -58,8 +58,8 @@ Five trace events are emitted per handover (in order):
 
 - Smoke test asserts post-handover `arm_state == "ready"` via `GET /status`
 - Smoke test asserts all 5 lifecycle trace events present and in correct order
-- New test `test_handover_requires_ready_state` validates IDLE→session/start→409 path
-  and that after a handover the arm is back in READY
+- New test `test_handover_rejects_non_ready_active_session` forces the shared state machine
+  into `TASK_ARMING` after session open and expects `409` from `POST /handover/request`
 
 ---
 

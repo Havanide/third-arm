@@ -40,14 +40,21 @@ def clear_settings_cache():
 
 
 @pytest_asyncio.fixture
-async def client(tmp_path, monkeypatch):
-    """AsyncClient with isolated sessions directory wired into settings."""
+async def app_client(tmp_path, monkeypatch):
+    """App + AsyncClient with isolated sessions directory wired into settings."""
     monkeypatch.setenv("THIRD_ARM_SESSIONS_DIR", str(tmp_path))
     get_settings.cache_clear()
     app = create_app()
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         async with app.router.lifespan_context(app):
-            yield ac
+            yield app, ac
+
+
+@pytest_asyncio.fixture
+async def client(app_client):
+    """AsyncClient view over the shared app_client fixture."""
+    _, ac = app_client
+    yield ac
 
 
 @pytest.mark.smoke
@@ -202,41 +209,33 @@ async def test_handover_requires_active_session(client):
 
 
 @pytest.mark.asyncio
-async def test_handover_requires_ready_state(client):
-    """POST /handover/request should reject when arm is not in READY state."""
+async def test_handover_rejects_non_ready_active_session(app_client):
+    """POST /handover/request should reject an active session when arm state is not READY."""
 
-    # IDLE (no home) + active session is not possible in Stage 1 because
-    # session/start now requires READY. So we verify the guard on handover
-    # itself by attempting it after a full handover cycle, which leaves the
-    # arm in READY — then checking that a second request succeeds (proving
-    # the guard allows READY), and separately verifying the 409 detail for
-    # an active session without being in READY.
-    #
-    # The direct path: arm stays IDLE → cannot open a session → 409 from
-    # session/start. Guard on handover/request for non-READY is exercised
-    # transitively. We expose this explicitly by testing the error message.
+    app, client = app_client
 
-    # Arm is IDLE at startup; session/start must fail with 409
-    resp = await client.post(
+    home = await client.post("/arm/home")
+    assert home.status_code == 202, home.text
+
+    start = await client.post(
         "/session/start",
         json={"operator_id": "test_op", "object_id": "obj_water_bottle_500ml", "slot_id": "slot_A"},
     )
-    assert resp.status_code == 409, resp.text
-    detail = resp.json()["detail"]
-    assert detail["current_state"] == "idle"
+    assert start.status_code == 200, start.text
 
-    # After homing and opening a session, handover succeeds → arm returns to READY
-    await client.post("/arm/home")
-    await client.post(
-        "/session/start",
-        json={"operator_id": "test_op", "object_id": "obj_water_bottle_500ml", "slot_id": "slot_A"},
-    )
+    # Force the shared state machine into a valid non-READY state that can
+    # exist only after session start. This directly exercises the handover
+    # guard rather than re-testing /session/start from IDLE.
+    sm = app.state.state_machine
+    sm.trigger("session_start")
+    assert sm.state.value == "task_arming"
+
     resp = await client.post(
         "/handover/request",
         json={"object_id": "obj_water_bottle_500ml", "slot_id": "slot_A"},
     )
-    assert resp.status_code == 202, resp.text
+    assert resp.status_code == 409, resp.text
+    assert resp.json()["detail"] == "Arm is not ready (current state: task_arming)"
 
-    # Arm must be back to READY
-    status = await client.get("/status")
-    assert status.json()["arm_state"] == "ready"
+    stop = await client.post("/session/stop")
+    assert stop.status_code == 200, stop.text

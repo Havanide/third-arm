@@ -20,7 +20,7 @@ Stage 1
 - `POST /handover/request` is the task lifecycle entry point: triggers full state sequence READY→TASK_ARMING→ACQUIRE→LIFT→PRESENT→TRANSFER_WAIT→RELEASE→RETRACT→TASK_COMPLETE→HOMING→READY
 - Trace events emitted per handover: `handover_requested`, `task_lifecycle_entered`, `handover_driver_started`, `handover_completed`, `task_lifecycle_completed`
 - Arm auto-returns to READY after each handover (Stage 1 mock); Stage 1.5 will gate on physical home confirmation
-- Integration tests verify post-handover arm state (READY) and full lifecycle event ordering
+- Integration tests verify post-handover arm state (READY), direct non-READY rejection for `POST /handover/request`, and full lifecycle event ordering
 
 ## Confirmed frozen
 - API freeze: yes
