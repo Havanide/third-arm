@@ -7,7 +7,23 @@ arm driver, and bundle writer.
 Stage 1: no-op / mock sequence. The real sequence will block while the arm
 moves; this stub returns immediately.
 
+Task lifecycle boundary
+───────────────────────
+  POST /session/start   → session/bundle gate only; no state machine change
+  POST /handover/request → task lifecycle entry; READY → TASK_ARMING via
+                           ``session_start`` trigger
+
+Post-handover state
+───────────────────
+  Stage 1 (mock): after ``task_done`` (→ TASK_COMPLETE) the service
+  immediately auto-homes back to READY via ``home_cmd`` + ``home_complete``.
+  This allows multiple handovers per session without operator re-homing.
+
+  Stage 1.5+: ``home_complete`` will be gated on physical home confirmation
+  from the real arm driver.
+
 TODO: implement actual async handover coroutine using driver callbacks.
+TODO (Stage 1.5): gate home_complete on real arm driver home confirmation.
 TODO (Stage 1.5): add vision-gated grasp confirmation.
 TODO (Stage 2+): intent-triggered release.
 """
@@ -54,6 +70,13 @@ class HandoverService:
 
         Returns a summary dict with handover_id and status.
 
+        Preconditions:
+            - An active session must exist (NoActiveSessionError otherwise).
+            - Arm must be in READY state (ArmNotReadyError otherwise).
+
+        Post-condition (Stage 1 mock):
+            - Arm returns to READY after task completion.
+
         Raises:
             NoActiveSessionError: if no session is currently active.
             ArmNotReadyError: if the arm is not in READY state.
@@ -74,12 +97,18 @@ class HandoverService:
             "slot_id": slot_id,
         })
 
-        # ── Stage 1: skeleton sequence (mock, no real blocking) ───────────────
-        # TODO: replace each step with real async driver calls + state guards
-
+        # ── Task lifecycle entry ──────────────────────────────────────────────
         self._sm.trigger("session_start")   # READY → TASK_ARMING
+        self._bundle_writer.write_trace_event({
+            "event": "task_lifecycle_entered",
+            "handover_id": handover_id,
+            "session_id": session.session_id,
+            "arm_state": self._sm.state.value,  # task_arming
+        })
         await asyncio.sleep(0)              # yield to event loop
 
+        # ── Stage 1: skeleton sequence (mock, no real blocking) ───────────────
+        # TODO: replace each step with real async driver calls + state guards
         self._sm.trigger("task_arm")        # TASK_ARMING → ACQUIRE
         self._bundle_writer.write_trace_event({
             "event": "handover_driver_started",
@@ -111,6 +140,18 @@ class HandoverService:
             "handover_id": handover_id,
             "session_id": session.session_id,
         })
+
+        # ── Stage 1 mock: auto-return arm to READY after task_complete ────────
+        # Real hardware will gate home_complete on physical confirmation (Stage 1.5+).
+        self._sm.trigger("home_cmd")        # TASK_COMPLETE → HOMING
+        self._sm.trigger("home_complete")   # HOMING → READY
+        self._bundle_writer.write_trace_event({
+            "event": "task_lifecycle_completed",
+            "handover_id": handover_id,
+            "session_id": session.session_id,
+            "arm_state": self._sm.state.value,  # ready
+        })
+        logger.info("Arm returned to READY after handover: %s", handover_id)
 
         session.handover_ids.append(handover_id)
 
