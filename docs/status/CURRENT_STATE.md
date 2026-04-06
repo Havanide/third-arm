@@ -4,7 +4,7 @@
 Stage 1
 
 ## Current active slice
-`POST /session/start` requires READY state
+`Stage 1 pre-bringup runtime hardening`
 
 ## Confirmed implemented
 - Operator flow works through REST: `POST /arm/home -> POST /session/start -> POST /handover/request -> POST /session/stop -> GET /artifacts`
@@ -17,6 +17,10 @@ Stage 1
 - `GET /artifacts/{session_id}` returns bundle metadata, presence flags, file inventory, and trace event count; 404 for unknown/unsafe ids; degraded response for incomplete or broken bundles inside the sessions root
 - `docs/api/openapi.yaml` is updated as the authoritative hand-maintained Stage 1 contract, including request bodies, success responses, known 4xx responses, and FastAPI validation errors
 - `POST /session/start` is allowed only from `READY`; direct calls from `IDLE` now return `409` with structured `detail.message` and `detail.current_state`
+- `POST /handover/request` is the task lifecycle entry point: triggers full state sequence READY→TASK_ARMING→ACQUIRE→LIFT→PRESENT→TRANSFER_WAIT→RELEASE→RETRACT→TASK_COMPLETE→HOMING→READY
+- Trace events emitted per handover: `handover_requested`, `task_lifecycle_entered`, `handover_driver_started`, `handover_completed`, `task_lifecycle_completed`
+- Arm auto-returns to READY after each handover (Stage 1 mock); Stage 1.5 will gate on physical home confirmation
+- Integration tests verify post-handover arm state (READY), direct non-READY rejection for `POST /handover/request`, and full lifecycle event ordering
 
 ## Confirmed frozen
 - API freeze: yes
@@ -28,7 +32,7 @@ Stage 1
 - none
 
 ## Next planned slice
-- Decide whether `POST /session/start` should also trigger the state-machine `session_start` transition during Stage 1
+- Stage 1.5: camera integration / vision-gated grasp confirmation; gate `home_complete` on physical arm driver confirmation
 
 ## Blockers
 - none

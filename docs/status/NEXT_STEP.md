@@ -1,22 +1,23 @@
 # Next Step
 
 ## Goal
-Decide whether `POST /session/start` should also trigger the state-machine `session_start`
-transition during Stage 1, or remain a pure session/bundle gate before handover.
+Stage 1.5: camera integration and vision-gated grasp confirmation.
+Gate `home_complete` on physical arm driver confirmation (not auto-triggered as in Stage 1 mock).
 
 ## Scope
-- Review current state-machine usage in the runtime flow
-- Make the explicit decision
-- If a transition is required: update router, tests, and openapi.yaml/docs accordingly
-- Update DECISIONS_LOG.md with the decision and rationale
+- Wire real arm driver (or camera-aware mock) into `HandoverService`
+- Add grasp confirmation signal before `transfer_complete` trigger
+- Gate `home_complete` on physical home sensor confirmation from driver
+- Update `MockArmDriver` to simulate confirmation callbacks with configurable latency
+- Update DECISIONS_LOG.md, CURRENT_STATE.md, RPD (v0.22+)
 
 ## Do not do
-- Do not change other endpoints in this slice
-- Do not pull Stage 1.5 vision or camera work
-- Do not refactor session or handover flow beyond the transition decision
+- Do not change Stage 1 session/handover logic already frozen
+- Do not pull Stage 2 IMU/sEMG intent work
+- Do not break existing smoke gate
 
 ## Done when
-- Decision made and recorded in DECISIONS_LOG.md
-- If behaviour changes: runtime + tests + openapi.yaml updated
-- If decision is "keep as-is": just record the decision in DECISIONS_LOG.md
-- CURRENT_STATE.md and NEXT_STEP.md updated
+- Vision-gated grasp confirmation path exercised in tests
+- `home_complete` gated on driver callback, not auto-triggered
+- Smoke gate still passes
+- DECISIONS_LOG.md and CURRENT_STATE.md updated

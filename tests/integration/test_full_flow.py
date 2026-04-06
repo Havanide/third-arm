@@ -15,7 +15,8 @@ Assertions verify:
   - All HTTP status codes
   - Bundle files exist on disk: manifest.json, session_trace.ndjson, telemetry.mcap
   - manifest["closed_at"] is set after stop
-  - Trace contains "session_started" and "handover_completed" events
+  - Trace contains all expected lifecycle events in order
+  - Arm returns to READY after handover completes (auto-return)
 """
 
 from __future__ import annotations
@@ -39,14 +40,21 @@ def clear_settings_cache():
 
 
 @pytest_asyncio.fixture
-async def client(tmp_path, monkeypatch):
-    """AsyncClient with isolated sessions directory wired into settings."""
+async def app_client(tmp_path, monkeypatch):
+    """App + AsyncClient with isolated sessions directory wired into settings."""
     monkeypatch.setenv("THIRD_ARM_SESSIONS_DIR", str(tmp_path))
     get_settings.cache_clear()
     app = create_app()
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         async with app.router.lifespan_context(app):
-            yield ac
+            yield app, ac
+
+
+@pytest_asyncio.fixture
+async def client(app_client):
+    """AsyncClient view over the shared app_client fixture."""
+    _, ac = app_client
+    yield ac
 
 
 @pytest.mark.smoke
@@ -89,6 +97,13 @@ async def test_full_session_handover_flow(client, tmp_path):
     assert handover_id.startswith("hov_")
     assert set(handover_data) == {"handover_id", "object_id", "slot_id", "completed_at", "status"}
 
+    # ── 3a. Verify arm auto-returned to READY after handover ──────────────────
+    resp = await client.get("/status")
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["arm_state"] == "ready", (
+        f"Arm should be READY after handover; got: {resp.json()['arm_state']}"
+    )
+
     # ── 4. Stop the session ───────────────────────────────────────────────────
     resp = await client.post("/session/stop")
     assert resp.status_code == 200, resp.text
@@ -114,13 +129,21 @@ async def test_full_session_handover_flow(client, tmp_path):
 
     assert "session_started" in event_names, f"session_started missing; events: {event_names}"
     assert "handover_requested" in event_names, f"handover_requested missing"
+    assert "task_lifecycle_entered" in event_names, f"task_lifecycle_entered missing"
     assert "handover_driver_started" in event_names, f"handover_driver_started missing"
     assert "handover_completed" in event_names, f"handover_completed missing"
+    assert "task_lifecycle_completed" in event_names, f"task_lifecycle_completed missing"
     assert "session_stopped" in event_names, f"session_stopped missing"
 
-    # Verify ordering: session_started comes first, session_stopped comes last
+    # Verify ordering: session_started first, lifecycle events ordered, session_stopped last
     assert event_names[0] == "session_started"
     assert event_names[-1] == "session_stopped"
+    lifecycle_entered_idx = event_names.index("task_lifecycle_entered")
+    handover_completed_idx = event_names.index("handover_completed")
+    lifecycle_completed_idx = event_names.index("task_lifecycle_completed")
+    assert lifecycle_entered_idx < handover_completed_idx < lifecycle_completed_idx, (
+        f"Unexpected event ordering: {event_names}"
+    )
 
     # ── 8. Verify GET /artifacts sees the bundle ──────────────────────────────
     resp = await client.get("/artifacts")
@@ -183,3 +206,36 @@ async def test_handover_requires_active_session(client):
     )
     assert resp.status_code == 409, resp.text
     assert resp.json()["detail"] == "No active session"
+
+
+@pytest.mark.asyncio
+async def test_handover_rejects_non_ready_active_session(app_client):
+    """POST /handover/request should reject an active session when arm state is not READY."""
+
+    app, client = app_client
+
+    home = await client.post("/arm/home")
+    assert home.status_code == 202, home.text
+
+    start = await client.post(
+        "/session/start",
+        json={"operator_id": "test_op", "object_id": "obj_water_bottle_500ml", "slot_id": "slot_A"},
+    )
+    assert start.status_code == 200, start.text
+
+    # Force the shared state machine into a valid non-READY state that can
+    # exist only after session start. This directly exercises the handover
+    # guard rather than re-testing /session/start from IDLE.
+    sm = app.state.state_machine
+    sm.trigger("session_start")
+    assert sm.state.value == "task_arming"
+
+    resp = await client.post(
+        "/handover/request",
+        json={"object_id": "obj_water_bottle_500ml", "slot_id": "slot_A"},
+    )
+    assert resp.status_code == 409, resp.text
+    assert resp.json()["detail"] == "Arm is not ready (current state: task_arming)"
+
+    stop = await client.post("/session/stop")
+    assert stop.status_code == 200, stop.text

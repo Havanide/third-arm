@@ -44,3 +44,13 @@
 - Decision: `POST /session/start` requires explicit `READY` state in Stage 1.
 - Reason: The operator flow is already `home -> session/start`; allowing direct start from `IDLE` kept the precondition ambiguous and hid setup mistakes. Stage 1 should fail loudly instead of auto-homing or guessing operator intent.
 - Affects: session router precondition, 409 error contract, integration tests, Stage 1 operator flow docs, RPD.
+
+## 2026-04-06
+- Decision: `POST /session/start` is a pure session/bundle gate; `POST /handover/request` is the task lifecycle entry point (READY → TASK_ARMING via `session_start` trigger).
+- Reason: Separates operator intent (open session) from arm motion (task lifecycle). Keeps session/start lightweight and allows multiple handovers per session without re-entering the lifecycle gate each time.
+- Affects: `HandoverService`, `StateMachine` trigger sequence, session router, trace events.
+
+## 2026-04-06
+- Decision: Stage 1 mock auto-returns arm to READY after each handover (`task_done` → `home_cmd` → `home_complete` → READY).
+- Reason: Allows multiple handovers per session without operator re-homing. Physical home confirmation will gate this transition in Stage 1.5+.
+- Affects: `HandoverService` post-handover sequence, `StateMachine`, trace events (`task_lifecycle_completed`), integration tests.
