@@ -31,3 +31,10 @@
 - Decision: `GET /artifacts/{session_id}` must validate session ids and degrade honestly on broken bundles.
 - Reason: Stage 1 inspection is for operator debugging before hardware bring-up; broken bundles inside the session root must remain inspectable, while unsafe path-style ids must never escape the configured storage root.
 - Affects: artifact router lookup rules, inspection response contract, integration tests, RPD wording.
+
+## 2026-04-06
+- Decision: `docs/api/openapi.yaml` remains hand-maintained in Stage 1.
+- Reason: Runtime schema generation requires a live app process; hand-maintained YAML is
+  reviewable in PRs and serves as the authoritative contract reference without infra dependency.
+  FastAPI `/docs` and `/redoc` remain available for interactive exploration.
+- Affects: docs workflow, PR review practice for API contract changes.

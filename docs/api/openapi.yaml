@@ -42,7 +42,7 @@ paths:
       operationId: getStatus
       responses:
         "200":
-          description: Current status
+          description: Current status snapshot
           content:
             application/json:
               schema:
@@ -65,8 +65,10 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/SessionResponse"
+        "404":
+          description: Unknown object_id or slot_id
         "409":
-          description: Session already active
+          description: Session already active or arm not in valid state
 
   /session/stop:
     post:
@@ -91,8 +93,12 @@ paths:
       responses:
         "202":
           description: Home command accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ArmHomeResponse"
         "409":
-          description: Command rejected in current state
+          description: Command rejected in current arm state
 
   /handover/request:
     post:
@@ -106,13 +112,15 @@ paths:
               $ref: "#/components/schemas/HandoverRequest"
       responses:
         "202":
-          description: Handover initiated
+          description: Handover completed (Stage 1 synchronous mock)
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/HandoverResponse"
+        "404":
+          description: Unknown object_id or slot_id
         "409":
-          description: Arm not ready
+          description: No active session or arm not ready
 
   /artifacts:
     get:
@@ -127,22 +135,56 @@ paths:
               schema:
                 $ref: "#/components/schemas/ArtifactsResponse"
 
+  /artifacts/{session_id}:
+    get:
+      tags: [artifacts]
+      summary: Inspect a single session bundle
+      operationId: getArtifact
+      parameters:
+        - name: session_id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "session_20260404_abc123"
+          description: |
+            Opaque session bundle identifier. Must match pattern [A-Za-z0-9][A-Za-z0-9._-]*.
+            Unsafe values (path traversal, slashes, dots-only) are rejected with 404.
+      responses:
+        "200":
+          description: |
+            Bundle metadata and file inventory. Returned even for incomplete or broken
+            bundles — use the `errors` field to distinguish broken from healthy.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ArtifactDetailResponse"
+        "404":
+          description: Session bundle not found or session_id is unsafe
+
 components:
   schemas:
     HealthResponse:
       type: object
       properties:
-        status:  { type: string, example: ok }
-        version: { type: string, example: "0.1.0" }
+        ok:      { type: boolean, example: true }
         ts:      { type: string, format: date-time }
+        message: { type: string, example: ok }
 
     StatusResponse:
       type: object
       properties:
+        ts:         { type: string, format: date-time }
         arm_state:  { type: string, example: idle }
         session_id: { type: string, nullable: true }
         uptime_s:   { type: number }
         mock_mode:  { type: boolean }
+
+    ArmHomeResponse:
+      type: object
+      properties:
+        accepted:  { type: boolean, example: true }
+        new_state: { type: string, example: ready }
 
     SessionStartRequest:
       type: object
@@ -155,8 +197,8 @@ components:
     SessionResponse:
       type: object
       properties:
-        session_id: { type: string }
-        started_at: { type: string, format: date-time }
+        session_id:  { type: string }
+        started_at:  { type: string, format: date-time }
         operator_id: { type: string }
 
     SessionStopResponse:
@@ -164,10 +206,11 @@ components:
       properties:
         session_id: { type: string }
         stopped_at: { type: string, format: date-time }
-        status: { type: string }
+        status:     { type: string, example: stopped }
 
     HandoverRequest:
       type: object
+      required: [object_id, slot_id]
       properties:
         object_id: { type: string }
         slot_id:   { type: string }
@@ -175,11 +218,11 @@ components:
     HandoverResponse:
       type: object
       properties:
-        handover_id: { type: string }
-        object_id: { type: string }
-        slot_id: { type: string }
+        handover_id:  { type: string }
+        object_id:    { type: string }
+        slot_id:      { type: string }
         completed_at: { type: string, format: date-time }
-        status: { type: string }
+        status:       { type: string, example: complete }
 
     ArtifactsResponse:
       type: object
@@ -192,3 +235,48 @@ components:
               session_id: { type: string }
               path:       { type: string }
               size_bytes: { type: integer }
+        count: { type: integer }
+
+    ArtifactDetailResponse:
+      type: object
+      properties:
+        session_id:     { type: string }
+        schema_version: { type: string, nullable: true, example: "1.0" }
+        created_at:     { type: string, format: date-time, nullable: true }
+        closed_at:      { type: string, format: date-time, nullable: true }
+        is_closed:      { type: boolean }
+        presence:
+          $ref: "#/components/schemas/PresenceFlags"
+        files:
+          type: array
+          items:
+            $ref: "#/components/schemas/BundleFileEntry"
+        trace_summary:
+          $ref: "#/components/schemas/TraceSummary"
+        errors:
+          type: array
+          items: { type: string }
+          description: |
+            Machine-readable inspection errors. Empty for healthy bundles.
+            Known values: manifest_missing, manifest_unreadable, trace_unreadable.
+
+    PresenceFlags:
+      type: object
+      description: Indicates which expected bundle files are present on disk.
+      properties:
+        manifest:  { type: boolean }
+        trace:     { type: boolean }
+        telemetry: { type: boolean }
+
+    BundleFileEntry:
+      type: object
+      properties:
+        name:       { type: string, example: "manifest.json" }
+        category:   { type: string, example: "manifest", enum: [manifest, trace, telemetry] }
+        exists:     { type: boolean }
+        size_bytes: { type: integer, description: "Present only when exists is true" }
+
+    TraceSummary:
+      type: object
+      properties:
+        event_count: { type: integer }
