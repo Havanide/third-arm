@@ -4,7 +4,7 @@
 Stage 1
 
 ## Current active slice
-docs/api/openapi.yaml synced with Stage 1 API surface
+`POST /session/start` requires READY state
 
 ## Confirmed implemented
 - Operator flow works through REST: `POST /arm/home -> POST /session/start -> POST /handover/request -> POST /session/stop -> GET /artifacts`
@@ -16,6 +16,7 @@ docs/api/openapi.yaml synced with Stage 1 API surface
 - Stage 1 smoke path marked with `@pytest.mark.smoke`; runs as dedicated CI gate before full suite
 - `GET /artifacts/{session_id}` returns bundle metadata, presence flags, file inventory, and trace event count; 404 for unknown/unsafe ids; degraded response for incomplete or broken bundles inside the sessions root
 - `docs/api/openapi.yaml` is updated as the authoritative hand-maintained Stage 1 contract, including request bodies, success responses, known 4xx responses, and FastAPI validation errors
+- `POST /session/start` is allowed only from `READY`; direct calls from `IDLE` now return `409` with structured `detail.message` and `detail.current_state`
 
 ## Confirmed frozen
 - API freeze: yes
@@ -27,7 +28,7 @@ docs/api/openapi.yaml synced with Stage 1 API surface
 - none
 
 ## Next planned slice
-- Decide whether `POST /session/start` should require explicit READY state (vs allowing IDLE)
+- Decide whether `POST /session/start` should also trigger the state-machine `session_start` transition during Stage 1
 
 ## Blockers
 - none

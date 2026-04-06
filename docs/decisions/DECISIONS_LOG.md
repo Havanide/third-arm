@@ -39,3 +39,8 @@
   FastAPI `/docs` and `/redoc` remain available for interactive exploration, but can remain
   broader or less precise for endpoints without explicit runtime response models.
 - Affects: docs workflow, PR review practice for API contract changes, expectations around generated vs checked-in OpenAPI.
+
+## 2026-04-06
+- Decision: `POST /session/start` requires explicit `READY` state in Stage 1.
+- Reason: The operator flow is already `home -> session/start`; allowing direct start from `IDLE` kept the precondition ambiguous and hid setup mistakes. Stage 1 should fail loudly instead of auto-homing or guessing operator intent.
+- Affects: session router precondition, 409 error contract, integration tests, Stage 1 operator flow docs, RPD.

@@ -131,6 +131,46 @@ async def test_full_session_handover_flow(client, tmp_path):
 
 
 @pytest.mark.asyncio
+async def test_session_start_succeeds_from_ready(client):
+    """POST /session/start should succeed once the arm has been homed to READY."""
+
+    home = await client.post("/arm/home")
+    assert home.status_code == 202, home.text
+    assert home.json()["new_state"] == "ready"
+
+    resp = await client.post(
+        "/session/start",
+        json={
+            "operator_id": "test_op",
+            "object_id": "obj_water_bottle_500ml",
+            "slot_id": "slot_A",
+        },
+    )
+    assert resp.status_code == 200, resp.text
+    data = resp.json()
+    assert set(data) == {"session_id", "started_at", "operator_id"}
+    assert data["operator_id"] == "test_op"
+
+
+@pytest.mark.asyncio
+async def test_session_start_requires_ready_state(client):
+    """POST /session/start should reject IDLE with current_state included in the error."""
+
+    resp = await client.post(
+        "/session/start",
+        json={
+            "operator_id": "test_op",
+            "object_id": "obj_water_bottle_500ml",
+            "slot_id": "slot_A",
+        },
+    )
+    assert resp.status_code == 409, resp.text
+    detail = resp.json()["detail"]
+    assert detail["current_state"] == "idle"
+    assert "requires arm state 'ready'" in detail["message"]
+
+
+@pytest.mark.asyncio
 async def test_handover_requires_active_session(client):
     """POST /handover/request should reject requests when no session is active."""
 

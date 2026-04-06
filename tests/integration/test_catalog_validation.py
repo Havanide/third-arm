@@ -29,6 +29,8 @@ async def client():
 
 @pytest.mark.asyncio
 async def test_unknown_object_rejected_on_session_start(client):
+    home = await client.post('/arm/home')
+    assert home.status_code == 202
     resp = await client.post('/session/start', json={'object_id': 'obj_missing', 'slot_id': 'slot_A'})
     assert resp.status_code == 404
     assert 'Unknown object_id' in resp.text
@@ -36,6 +38,8 @@ async def test_unknown_object_rejected_on_session_start(client):
 
 @pytest.mark.asyncio
 async def test_unknown_slot_rejected_on_session_start(client):
+    home = await client.post('/arm/home')
+    assert home.status_code == 202
     resp = await client.post('/session/start', json={'object_id': 'obj_mug_ceramic', 'slot_id': 'slot_missing'})
     assert resp.status_code == 404
     assert 'Unknown slot_id' in resp.text

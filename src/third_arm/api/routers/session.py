@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from third_arm.api.deps import get_session_service, get_state_machine
 from third_arm.api.schemas.commands import (
+    SessionStartConflictResponse,
     SessionStartRequest,
     SessionResponse,
     SessionStopResponse,
@@ -23,6 +24,12 @@ router = APIRouter(prefix="/session", tags=["session"])
     "/start",
     status_code=status.HTTP_200_OK,
     response_model=SessionResponse,
+    responses={
+        status.HTTP_409_CONFLICT: {
+            "model": SessionStartConflictResponse,
+            "description": "Arm is not in READY state or a session is already active",
+        },
+    },
 )
 async def start_session(
     body: SessionStartRequest,
@@ -31,15 +38,18 @@ async def start_session(
 ) -> SessionResponse:
     """Begin a new handover session.
 
-    The arm must be in READY or IDLE state to start a session.
+    The arm must already be in READY state to start a session.
     Opens a session bundle on disk for later discovery via ``GET /artifacts``.
 
-    TODO: trigger state machine ``home_cmd`` if arm is IDLE.
+    No implicit homing or auto-transition occurs here.
     """
-    if sm.state not in (ArmState.READY, ArmState.IDLE):
+    if sm.state is not ArmState.READY:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail=f"Cannot start session in state '{sm.state.value}'",
+            detail={
+                "message": "Session start requires arm state 'ready'; call POST /arm/home first",
+                "current_state": sm.state.value,
+            },
         )
 
     if body.object_id and not get_object(body.object_id):
@@ -55,7 +65,13 @@ async def start_session(
             notes=body.notes,
         )
     except SessionAlreadyActiveError as exc:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "message": str(exc),
+                "current_state": sm.state.value,
+            },
+        ) from exc
 
     return {
         "session_id": session.session_id,

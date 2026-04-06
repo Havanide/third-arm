@@ -51,7 +51,7 @@ paths:
   /session/start:
     post:
       tags: [session]
-      summary: Begin a new handover session
+      summary: Begin a new handover session (READY required)
       operationId: startSession
       requestBody:
         required: true
@@ -69,7 +69,11 @@ paths:
         "404":
           description: Unknown object_id or slot_id
         "409":
-          description: Session already active or arm not in valid state
+          description: Session start rejected because the arm is not READY or a session is already active
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionStartConflictResponse"
         "422":
           description: Validation Error
           content:
@@ -233,6 +237,24 @@ components:
         session_id:  { type: string }
         started_at:  { type: string, format: date-time }
         operator_id: { type: string }
+
+    SessionStartConflictDetail:
+      type: object
+      required: [message, current_state]
+      properties:
+        message:
+          type: string
+          example: "Session start requires arm state 'ready'; call POST /arm/home first"
+        current_state:
+          type: string
+          example: idle
+
+    SessionStartConflictResponse:
+      type: object
+      required: [detail]
+      properties:
+        detail:
+          $ref: "#/components/schemas/SessionStartConflictDetail"
 
     SessionStopResponse:
       type: object
