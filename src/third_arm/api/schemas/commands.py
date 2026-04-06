@@ -33,6 +33,19 @@ class SessionResponse(BaseModel):
     operator_id: str
 
 
+class SessionStartConflictDetail(BaseModel):
+    """Structured 409 detail for POST /session/start."""
+
+    message: str
+    current_state: str
+
+
+class SessionStartConflictResponse(BaseModel):
+    """HTTP 409 response body for POST /session/start."""
+
+    detail: SessionStartConflictDetail
+
+
 class SessionStopResponse(BaseModel):
     """Response body for POST /session/stop."""
 

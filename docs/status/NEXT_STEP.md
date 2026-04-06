@@ -1,22 +1,22 @@
 # Next Step
 
 ## Goal
-Decide and implement the `POST /session/start` state requirement: should it require explicit
-READY state, or continue to accept both IDLE and READY?
+Decide whether `POST /session/start` should also trigger the state-machine `session_start`
+transition during Stage 1, or remain a pure session/bundle gate before handover.
 
 ## Scope
-- Review the open question in OPEN_QUESTIONS.md
+- Review current state-machine usage in the runtime flow
 - Make the explicit decision
-- If READY is required: update session router, tests, and openapi.yaml accordingly
+- If a transition is required: update router, tests, and openapi.yaml/docs accordingly
 - Update DECISIONS_LOG.md with the decision and rationale
 
 ## Do not do
 - Do not change other endpoints in this slice
 - Do not pull Stage 1.5 vision or camera work
-- Do not refactor session or handover flow beyond the state check
+- Do not refactor session or handover flow beyond the transition decision
 
 ## Done when
 - Decision made and recorded in DECISIONS_LOG.md
-- If behaviour changes: session router updated + tests pass + openapi.yaml updated
+- If behaviour changes: runtime + tests + openapi.yaml updated
 - If decision is "keep as-is": just record the decision in DECISIONS_LOG.md
 - CURRENT_STATE.md and NEXT_STEP.md updated
