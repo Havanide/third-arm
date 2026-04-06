@@ -36,5 +36,6 @@
 - Decision: `docs/api/openapi.yaml` remains hand-maintained in Stage 1.
 - Reason: Runtime schema generation requires a live app process; hand-maintained YAML is
   reviewable in PRs and serves as the authoritative contract reference without infra dependency.
-  FastAPI `/docs` and `/redoc` remain available for interactive exploration.
-- Affects: docs workflow, PR review practice for API contract changes.
+  FastAPI `/docs` and `/redoc` remain available for interactive exploration, but can remain
+  broader or less precise for endpoints without explicit runtime response models.
+- Affects: docs workflow, PR review practice for API contract changes, expectations around generated vs checked-in OpenAPI.

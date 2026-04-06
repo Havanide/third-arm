@@ -8,11 +8,13 @@
 
 ## Architecture is unchanged from v0.18
 
-No code changes in v0.19. This spec documents the API contract as it exists after the openapi.yaml sync.
+No code changes in v0.19. This spec documents the checked-in API contract after the openapi.yaml sync.
+The checked-in YAML is authoritative for Stage 1 review. Runtime-generated FastAPI docs remain
+available for exploration, but are less precise on endpoints that still return bare `dict` objects.
 
 ---
 
-## Stage 1 endpoint inventory (complete)
+## Stage 1 endpoint inventory (checked-in contract)
 
 ### GET /health
 - Response 200: `{ok: bool, ts: ISO8601, message: str}`
@@ -31,6 +33,7 @@ No code changes in v0.19. This spec documents the API contract as it exists afte
 - Response 200: `{session_id: str, started_at: ISO8601, operator_id: str}`
 - Response 404: unknown object_id or slot_id
 - Response 409: session already active or arm not in valid state
+- Response 422: FastAPI validation error
 
 ### POST /session/stop
 - Response 200: `{session_id: str, stopped_at: ISO8601, status: "stopped"}`
@@ -41,6 +44,7 @@ No code changes in v0.19. This spec documents the API contract as it exists afte
 - Response 202: `{handover_id: str, object_id: str, slot_id: str, completed_at: ISO8601, status: "complete"}`
 - Response 404: unknown object_id or slot_id
 - Response 409: no active session or arm not ready
+- Response 422: FastAPI validation error
 
 ### GET /artifacts
 - Response 200: `{bundles: [{session_id, path, size_bytes}], count: int}`
@@ -67,6 +71,7 @@ No code changes in v0.19. This spec documents the API contract as it exists afte
   ```
 - Response 200 (broken bundle): same shape with nullable manifest fields, `exists: false` for missing files, `errors: ["manifest_missing" | "manifest_unreadable" | "trace_unreadable"]`
 - Response 404: unknown session_id or unsafe path-like value
+- Response 422: FastAPI validation error
 
 ---
 
@@ -78,3 +83,4 @@ No code changes in v0.19. This spec documents the API contract as it exists afte
 - Bundle layout: frozen
 - `pytest -m smoke` merge gate: enforced via CI
 - `docs/api/openapi.yaml`: hand-maintained, authoritative contract reference
+- FastAPI `/docs` and `/redoc`: exploratory only until runtime response models are expanded

@@ -15,7 +15,7 @@ docs/api/openapi.yaml synced with Stage 1 API surface
 - Replay reader and artifact listing work against the runtime-produced bundle layout
 - Stage 1 smoke path marked with `@pytest.mark.smoke`; runs as dedicated CI gate before full suite
 - `GET /artifacts/{session_id}` returns bundle metadata, presence flags, file inventory, and trace event count; 404 for unknown/unsafe ids; degraded response for incomplete or broken bundles inside the sessions root
-- `docs/api/openapi.yaml` reflects full Stage 1 API surface (8 gaps corrected; decision to keep hand-maintained recorded in DECISIONS_LOG)
+- `docs/api/openapi.yaml` is updated as the authoritative hand-maintained Stage 1 contract, including request bodies, success responses, known 4xx responses, and FastAPI validation errors
 
 ## Confirmed frozen
 - API freeze: yes

@@ -26,7 +26,9 @@ Stage 1 remains: desktop-first, operator-triggered, mock hardware.
 ### API documentation (v0.19)
 
 `docs/api/openapi.yaml` now accurately reflects all Stage 1 endpoints, request bodies,
-response schemas, and error codes. Hand-maintained per decision in DECISIONS_LOG.md.
+response schemas, known 4xx responses, and FastAPI validation errors. Hand-maintained per
+decision in DECISIONS_LOG.md. Runtime-generated `/docs` remains available for exploration,
+but the checked-in YAML is the authoritative reviewed contract.
 
 ---
 
