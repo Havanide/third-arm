@@ -4,7 +4,7 @@
 Stage 1
 
 ## Current active slice
-GET /artifacts/{session_id} — single-bundle inspection endpoint
+docs/api/openapi.yaml synced with Stage 1 API surface
 
 ## Confirmed implemented
 - Operator flow works through REST: `POST /arm/home -> POST /session/start -> POST /handover/request -> POST /session/stop -> GET /artifacts`
@@ -15,6 +15,7 @@ GET /artifacts/{session_id} — single-bundle inspection endpoint
 - Replay reader and artifact listing work against the runtime-produced bundle layout
 - Stage 1 smoke path marked with `@pytest.mark.smoke`; runs as dedicated CI gate before full suite
 - `GET /artifacts/{session_id}` returns bundle metadata, presence flags, file inventory, and trace event count; 404 for unknown/unsafe ids; degraded response for incomplete or broken bundles inside the sessions root
+- `docs/api/openapi.yaml` is updated as the authoritative hand-maintained Stage 1 contract, including request bodies, success responses, known 4xx responses, and FastAPI validation errors
 
 ## Confirmed frozen
 - API freeze: yes
@@ -26,7 +27,7 @@ GET /artifacts/{session_id} — single-bundle inspection endpoint
 - none
 
 ## Next planned slice
-- Update `docs/api/openapi.yaml` to reflect current Stage 1 API surface
+- Decide whether `POST /session/start` should require explicit READY state (vs allowing IDLE)
 
 ## Blockers
 - none

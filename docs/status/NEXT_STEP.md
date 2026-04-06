@@ -1,22 +1,22 @@
 # Next Step
 
 ## Goal
-Sync `docs/api/openapi.yaml` with the current Stage 1 API surface.
+Decide and implement the `POST /session/start` state requirement: should it require explicit
+READY state, or continue to accept both IDLE and READY?
 
 ## Scope
-- Update `openapi.yaml` to include all current Stage 1 endpoints:
-  `GET /health`, `GET /status`, `POST /arm/home`, `POST /session/start`, `POST /session/stop`,
-  `POST /handover/request`, `GET /artifacts`, `GET /artifacts/{session_id}`
-- Add response schemas for `GET /artifacts/{session_id}` (bundle inspection response)
-- Resolve open question: hand-maintained vs auto-generated from FastAPI
+- Review the open question in OPEN_QUESTIONS.md
+- Make the explicit decision
+- If READY is required: update session router, tests, and openapi.yaml accordingly
+- Update DECISIONS_LOG.md with the decision and rationale
 
 ## Do not do
-- Do not change endpoint behaviour or response contracts
-- Do not add new endpoints in this slice
-- Do not pull Stage 1.5 vision or MCAP work
-- Do not refactor routers
+- Do not change other endpoints in this slice
+- Do not pull Stage 1.5 vision or camera work
+- Do not refactor session or handover flow beyond the state check
 
 ## Done when
-- `docs/api/openapi.yaml` matches current implementation
-- All existing Stage 1 paths and responses documented
-- `CURRENT_STATE.md` and `DECISIONS_LOG.md` updated
+- Decision made and recorded in DECISIONS_LOG.md
+- If behaviour changes: session router updated + tests pass + openapi.yaml updated
+- If decision is "keep as-is": just record the decision in DECISIONS_LOG.md
+- CURRENT_STATE.md and NEXT_STEP.md updated
