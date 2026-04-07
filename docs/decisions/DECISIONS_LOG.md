@@ -54,3 +54,8 @@
 - Decision: Stage 1 mock auto-returns arm to READY after each handover (`task_done` → `home_cmd` → `home_complete` → READY).
 - Reason: Allows multiple handovers per session without operator re-homing. Physical home confirmation will gate this transition in Stage 1.5+.
 - Affects: `HandoverService` post-handover sequence, `StateMachine`, trace events (`task_lifecycle_completed`), integration tests.
+
+## 2026-04-07
+- Decision: Stage 1 bench bring-up uses `MockArmDriver` throughout; real arm will not move during Stage 1 validation.
+- Reason: Software baseline must be fully validated (all 12 acceptance criteria) before real driver integration begins in Stage 1.5. Bench bring-up validates environment, networking, and API flow — not physical actuator behavior.
+- Affects: bring-up pack scope (`docs/bringup/`), acceptance criteria, E-stop procedure, bench config (`configs/app/stage1_bench.yaml`).

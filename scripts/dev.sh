@@ -20,8 +20,27 @@ if [[ ! -f ".env" ]]; then
 fi
 
 echo "🦾 Starting Third Arm dev server..."
-uvicorn third_arm.main:app \
-  --reload \
-  --host 0.0.0.0 \
-  --port 8080 \
-  --log-level debug
+
+readarray -t UVICORN_ARGS < <(python - <<'PY'
+from third_arm.core.settings import get_settings
+
+cfg = get_settings()
+
+print(cfg.host)
+print(cfg.port)
+print(str(cfg.log_level).lower())
+print("true" if cfg.reload else "false")
+PY
+)
+
+HOST="${UVICORN_ARGS[0]}"
+PORT="${UVICORN_ARGS[1]}"
+LOG_LEVEL="${UVICORN_ARGS[2]}"
+RELOAD="${UVICORN_ARGS[3]}"
+
+UVICORN_CMD=(uvicorn third_arm.main:app --host "$HOST" --port "$PORT" --log-level "$LOG_LEVEL")
+if [[ "$RELOAD" == "true" ]]; then
+  UVICORN_CMD+=(--reload)
+fi
+
+"${UVICORN_CMD[@]}"
