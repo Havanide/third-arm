@@ -4,7 +4,7 @@
 Stage 1
 
 ## Current active slice
-`Stage 1 pre-bringup runtime hardening`
+`Stage 1 bench bring-up pack`
 
 ## Confirmed implemented
 - Operator flow works through REST: `POST /arm/home -> POST /session/start -> POST /handover/request -> POST /session/stop -> GET /artifacts`
@@ -31,8 +31,14 @@ Stage 1
 ## In progress
 - none
 
+## Shipped — bench bring-up pack (v0.22)
+- `docs/bringup/STAGE1_BENCH_BRINGUP.md` — full bring-up guide (power sequence, operator flow, abort criteria, E-stop procedure)
+- `docs/bringup/STAGE1_BENCH_CHECKLIST.md` — step-by-step operator checklist (10 sections, A–J)
+- `docs/bringup/STAGE1_BENCH_ACCEPTANCE.md` — 12 acceptance criteria with pass/fail/known-gaps table
+- `configs/app/stage1_bench.yaml` — bench config (host: 0.0.0.0, mock: true, persistent sessions dir)
+
 ## Next planned slice
-- Stage 1.5: camera integration / vision-gated grasp confirmation; gate `home_complete` on physical arm driver confirmation
+- Stage 1.5: real arm driver integration + camera; wire `ArmDriverABC` implementation, gate `home_complete` on physical sensor, enable camera, add `POST /arm/estop` endpoint
 
 ## Blockers
 - none

@@ -1,0 +1,34 @@
+# Third Arm — Stage 1 Bench Bring-Up Configuration
+#
+# Use on: target bench host machine (not development laptop)
+# Differs from stage1_desktop.yaml in:
+#   - server.host: "0.0.0.0"  (LAN-accessible, not loopback-only)
+#   - logging.sessions_dir: persistent path on bench host
+#
+# SAFETY: hardware.mock MUST remain true for all Stage 1 bring-up.
+# Do NOT set mock: false until Stage 1.5 real arm driver is wired and tested.
+
+server:
+  host: "0.0.0.0"           # LAN-accessible (override to 127.0.0.1 if isolated)
+  port: 8080
+  log_level: INFO
+  reload: false              # no hot-reload on bench
+
+hardware:
+  mock: true                 # SAFETY: keep true — real driver not active in Stage 1
+  home_timeout_s: 10.0
+  handover_timeout_s: 30.0
+  safe_stop_timeout_s: 5.0
+
+camera:
+  enabled: false             # set true when camera physically connected (Stage 1.5)
+
+intent:
+  imu_enabled: false         # Stage 2+
+  semg_enabled: false        # Stage 2+
+
+logging:
+  sessions_dir: "/data/third-arm/sessions"   # persistent bench storage
+                                              # override with THIRD_ARM_SESSIONS_DIR env var
+  write_mcap: true
+  write_trace: true
