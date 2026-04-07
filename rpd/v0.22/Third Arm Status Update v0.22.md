@@ -12,7 +12,9 @@ Stage 1 software is fully frozen and validated. The repository now contains ever
 to run the first physical bench bring-up: environment guide, operator checklist, acceptance
 criteria, and bench-specific configuration.
 
-**No runtime code was changed in this slice.** All 39 tests continue to pass.
+No operator-facing runtime behavior was changed in this slice. The only code change is config
+plumbing so the bench profile and launcher instructions are actually executable. All 41 tests
+continue to pass.
 
 ---
 
@@ -52,7 +54,8 @@ Bench-specific app config:
 - `server.host: "0.0.0.0"` (LAN-accessible; stage1_desktop.yaml uses 127.0.0.1)
 - `hardware.mock: true` — safety invariant; must remain true for all Stage 1 bring-up
 - `logging.sessions_dir: "/data/third-arm/sessions"` — persistent path on bench host
-- All other settings identical to `stage1_desktop.yaml`
+- The profile is now loadable via `THIRD_ARM_CONFIG` / `THIRD_ARM_CONFIG_PROFILE`
+- `scripts/dev.sh` now launches uvicorn using the resolved runtime settings instead of hard-coded dev flags
 
 ### Status docs updated
 

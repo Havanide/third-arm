@@ -86,7 +86,7 @@ mkdir -p /data/third-arm/sessions
 # 5. Point to the bench config
 export THIRD_ARM_CONFIG=configs/app/stage1_bench.yaml
 
-# 6. Start the service
+# 6. Start the service (scripts/dev.sh now reads runtime settings)
 bash scripts/dev.sh
 # OR: uvicorn third_arm.main:app --host 0.0.0.0 --port 8080 --log-level info
 ```
@@ -179,7 +179,7 @@ curl -s http://bench-host:8080/artifacts/<session_id>
 
 Bring-up is complete when all of the following are true:
 - Session stopped; `status: stopped`
-- Bundle present with all 3 files; trace event count ≥ 6
+- Bundle present with all 3 files; trace event count ≥ 7
 - `arm_state` is `"ready"` or `"idle"` after all operations
 - No errors in service log
 - All 12 criteria in `STAGE1_BENCH_ACCEPTANCE.md` marked PASS

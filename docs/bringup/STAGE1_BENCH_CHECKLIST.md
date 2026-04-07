@@ -75,6 +75,7 @@
 - [ ] `POST /session/start {...}` → 200 with `session_id` ✓
 - [ ] `POST /session/stop` → `200 {"status": "stopped"}` ✓
 - [ ] `GET /artifacts` → `count >= 1`, session_id in list ✓
+- [ ] `GET /artifacts/{session_id}` → `is_closed: true`, `errors: []`, `presence.*: true` ✓
 
 ---
 
@@ -105,7 +106,7 @@
   - [ ] `presence.manifest: true` ✓
   - [ ] `presence.trace: true` ✓
   - [ ] `presence.telemetry: true` ✓
-  - [ ] `trace_summary.event_count >= 6` ✓
+  - [ ] `trace_summary.event_count >= 7` ✓
         (expected events: session_started, handover_requested, task_lifecycle_entered,
         handover_driver_started, handover_completed, task_lifecycle_completed, session_stopped)
   - [ ] `is_closed: true` ✓

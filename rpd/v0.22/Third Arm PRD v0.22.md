@@ -31,7 +31,7 @@ for the hardware milestone:
 | 5 | Handover cycle completes | HTTP 202; `status: complete` |
 | 6 | Arm auto-returns to READY | `arm_state: "ready"` after handover |
 | 7 | Session closes cleanly | HTTP 200; `status: stopped` |
-| 8 | Bundle artifacts recorded | All 3 files present; trace count ≥ 6 |
+| 8 | Bundle artifacts recorded | All 3 files present; trace count ≥ 7 |
 | 9 | Smoke gate passes on bench | `pytest -m smoke -v` → 1 passed |
 | 10 | Graceful stop mid-session | HTTP 200; bundle not corrupted |
 | 11 | IDLE guard enforced | HTTP 409 when arm not homed |

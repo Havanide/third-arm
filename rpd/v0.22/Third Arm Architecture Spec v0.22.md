@@ -3,8 +3,9 @@
 **Date:** 2026-04-07
 **Stage:** 1 (mock hardware, desktop-first)
 
-No runtime architecture changes in v0.22. This document adds bench bring-up environment
-assumptions, configuration reference, and the E-stop gap documentation.
+No arm-motion runtime changes in v0.22. This document adds bench bring-up environment
+assumptions, configuration reference, and the E-stop gap documentation. It also makes the
+bench config profile executable through the existing settings layer.
 
 See `rpd/v0.21/Third Arm Architecture Spec v0.21.md` for the full Stage 1 software architecture.
 
@@ -37,6 +38,10 @@ The Stage 1 bench environment must meet these requirements before bring-up begin
 
 **Safety invariant:** `hardware.mock: true` must be set in any Stage 1 config. The bring-up
 checklist verifies `mock_mode: true` from `GET /status` before any handover operations.
+
+`configs/app/stage1_bench.yaml` is loaded via `THIRD_ARM_CONFIG=configs/app/stage1_bench.yaml`
+or `THIRD_ARM_CONFIG_PROFILE=stage1_bench`. `scripts/dev.sh` reads the resolved runtime settings
+and starts uvicorn with the matching host/port/log-level/reload values.
 
 ---
 

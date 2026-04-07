@@ -17,9 +17,9 @@
 | 5 | Handover cycle completes | `POST /handover/request` | HTTP 202; `"status": "complete"` |
 | 6 | Arm auto-returns to READY | `GET /status` after handover | `"arm_state": "ready"` |
 | 7 | Session closes cleanly | `POST /session/stop` | HTTP 200; `"status": "stopped"` |
-| 8 | Bundle artifacts recorded | `GET /artifacts/{session_id}` | `presence.manifest`, `presence.trace`, `presence.telemetry` all `true`; `trace_summary.event_count >= 6` |
+| 8 | Bundle artifacts recorded | `GET /artifacts/{session_id}` | `presence.manifest`, `presence.trace`, `presence.telemetry` all `true`; `trace_summary.event_count >= 7` |
 | 9 | Smoke gate passes on bench | `pytest -m smoke -v` | 1 passed |
-| 10 | Graceful stop mid-session | `POST /session/stop` on active session | HTTP 200; bundle not corrupted |
+| 10 | Graceful stop mid-session | `POST /session/stop` on active session, then `GET /artifacts/{session_id}` | HTTP 200; `is_closed: true`; `errors: []`; bundle present |
 | 11 | IDLE guard enforced | `POST /session/start` without prior home | HTTP 409; `detail.current_state == "idle"` |
 | 12 | No unexpected 5xx | Full operator flow (criteria 3–8) | Zero unhandled exceptions; zero 5xx responses |
 
@@ -40,7 +40,7 @@ The bundle's `session_trace.ndjson` must contain these events in this order:
 ```
 
 Minimum event count: **7** (1 per session-level event + 5 per handover + 1 session stop).
-Criterion 8 uses `event_count >= 6` as a conservative lower bound.
+Criterion 8 therefore requires `event_count >= 7`.
 
 ---
 

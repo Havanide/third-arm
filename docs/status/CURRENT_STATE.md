@@ -35,7 +35,8 @@ Stage 1
 - `docs/bringup/STAGE1_BENCH_BRINGUP.md` — full bring-up guide (power sequence, operator flow, abort criteria, E-stop procedure)
 - `docs/bringup/STAGE1_BENCH_CHECKLIST.md` — step-by-step operator checklist (10 sections, A–J)
 - `docs/bringup/STAGE1_BENCH_ACCEPTANCE.md` — 12 acceptance criteria with pass/fail/known-gaps table
-- `configs/app/stage1_bench.yaml` — bench config (host: 0.0.0.0, mock: true, persistent sessions dir)
+- `configs/app/stage1_bench.yaml` — bench config profile; now loadable via `THIRD_ARM_CONFIG` or `THIRD_ARM_CONFIG_PROFILE=stage1_bench`
+- `scripts/dev.sh` now resolves host/port/log-level/reload from runtime settings, so bench launch instructions match the repo behavior
 
 ## Next planned slice
 - Stage 1.5: real arm driver integration + camera; wire `ArmDriverABC` implementation, gate `home_complete` on physical sensor, enable camera, add `POST /arm/estop` endpoint
